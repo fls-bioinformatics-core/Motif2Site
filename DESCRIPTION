@@ -1,0 +1,13 @@
+Package: Motif2Site
+Type: Package
+Title: Detect binding sites from motifs and ChIP-seq experiments, and compare binding sites across conditions
+Version: 0.99.0
+Authors@R: person("Peyman Zarrineh", email="peyman.zarrineh@manchester.ac.uk", role=c("cre", "aut"), comment = c(ORCID = "0000-0003-4820-4101"))
+Description: Detect binding sites using motifs IUPAC sequence or bed coordinates and ChIP-seq experiments in bed or bam format. Combine/compare binding sites across experiments, tissues, or conditions. All normalization and differential steps are done using TMM-GLM method. Signal decomposition is done by setting motifs as the centers of the mixture of normal distribution curves.
+License: GPL-2
+Encoding: UTF-8
+Imports: S4Vectors, stats, utils, methods,  grDevices, graphics, BiocGenerics, BSgenome, GenomeInfoDb, MASS, IRanges, GenomicRanges, Biostrings, GenomicAlignments, edgeR, mixtools
+Suggests: rmarkdown, knitr, BSgenome.Hsapiens.UCSC.hg38, BSgenome.Mmusculus.UCSC.mm10, BSgenome.Scerevisiae.UCSC.sacCer3
+biocViews: Software, Sequencing, ChIPSeq, DifferentialPeakCalling, Epigenetics, SequenceMatching 
+RoxygenNote: 7.1.1
+VignetteBuilder: knitr

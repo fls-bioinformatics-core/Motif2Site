@@ -1,0 +1,195 @@
+---
+title: "Motif2Site: an R package to detect binding sites from ChIP-seq and recenter them"
+author: "Peyman Zarrineh\\
+
+        The University of Manchester"
+date: "`r Sys.Date()`"
+bibliography: Motif2Site.bib
+biblio-style: apalike
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Motif2Site}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo=FALSE, results='asis', message=FALSE}
+knitr::opts_chunk$set(tidy         = FALSE,
+                      warning      = FALSE,
+                      message      = FALSE)
+
+```
+
+
+
+
+# Abstract
+
+Motif2Stie is an R package to detect transcription factor binding sites from motif sets and ChIP-seq experiments. The motif sets are either user provided bed files or user provided DNA nucleotide sequence motifs. It also combines and compares binding sites of a transcription factor across various experiments and conditions.
+
+
+# Introduction
+
+Transcription factors often bind to specific DNA nucleotide patterns reffered to as sequence motifs. Although sequence motifs are well-characterized for many transcription factors, detecting the actual binding sites is not always a straightforward task. Chromatin immunoprecipitation (ChIP) followed by DNA sequencing (ChIP-seq) is the major technology to detect binding regions of transcription factors. However, the binding regions detected by ChIP-seq may contains several or no DNA sequence motifs. **Motif2Site** is a novel R package which uses ChIP-seq information and detect transcription factor binding sites from a user provided DNA sequence motifs set.
+
+**Motif2Site** gets two different input, motif and ChIP-seq alignment information, to detect binding sites. First input is ChIP-seq alignment short reads in the bam or bed format. For each aligned short read the center of the alignment is calculated using **GenomicAlignments** [@Lawrence2013] and **Rsamtools** [@Morgan2020] packages. Motif information is the second input which is provided by user either as a bed file or a DNA string with a mismatch number. In the case of DNA string input, **Biostrings** [@Pages2019] and **BSgenome** [@Herve2019] packages are used to find motif locations on the genome in **GenomicRanges** [@Lawrence2013] format.
+
+Negative binomial distribution is used to model count data by using **edgeR** package [@Robinson2010]. **mixtools** [@Benaglia2009] is used to deconvolve binding intensities of closely spaced binding sites. **Motif2Site** also combines binding sites across different experiments. It calls differential binding sites using TMM normalization and GLM test using **edgeR** package [@Robinson2010]. 
+
+
+# Major functions of Motif2Site
+
+
+First install and load the libraries needed to run the examples of this document:
+
+```{r, results="hide", warning=FALSE, message=FALSE}
+
+library(Motif2Site)
+library(BSgenome.Scerevisiae.UCSC.sacCer3)
+library(BSgenome.Mmusculus.UCSC.mm10)
+
+```
+
+The functions, implemented in **Motif2Site**, perform three tasks: **1.** To assist users to select better sequence motif input.
+**2.** To detect binding sites from sequence motifs and ChIP-seq datasets  **3.** To combine and compare binding sites across different experiments, conditions, or tissues. Each of these functions are explained in a separate section.
+
+
+# Selecting sequence motif
+
+**Motif2Site** uses DNA motif information as one of its input. To facilitate choosing proper sequence motif, `compareBedFiless2UserProvidedRegions` and `compareMotifs2UserProvidedRegions` functions compare motif regions with a user provided confident regions in terms of precision and recall.
+
+As the first example, an artificially generated  "YeastSampleMotif.bed" bed file in yeast is considered as a confident binding regions set. `compareMotifs2UserProvidedRegions` function compares these regions with locations of 'TGATTSCAGGANT' 1-mismatch, 'TGATTCCAGGANT' 0-mismatch, 'TGATWSCAGGANT' 2-mismatches on the yeast genome in terms of precision and recall.
+
+```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=6}
+
+yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
+YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
+SequenceComparison <- compareMotifs2UserProvidedRegions(givenRegion=YeastRegionsChIPseq ,motifs = c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"), mismatchNumbers = c(1,0,2), genome="Scerevisiae",  genomeBuild="sacCer3")
+SequenceComparison
+
+```
+
+
+
+In the following example, an artificially generated  "YeastSampleMotif.bed" bed file in yeast is considered as a confident binding regions set. `compareBedFiless2UserProvidedRegions` function compares these regions with two bed files "YeastBedFile1.bed" and "YeastBedFile2.bed" in terms of precision and recall.
+
+
+```{r, warning=FALSE, message=FALSE, fig.width=8, fig.height=6}
+
+# Yeast artificial dataset for comparison bed files
+
+yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
+YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
+bed1 <- system.file("extdata", "YeastBedFile1.bed", package="Motif2Site")
+bed2 <- system.file("extdata", "YeastBedFile2.bed", package="Motif2Site")
+BedFilesVector <- c(bed1, bed2)
+SequenceComparison <- compareBedFiless2UserProvidedRegions(givenRegion=YeastRegionsChIPseq , bedfiles = BedFilesVector, motifnames = c("YeastBed1", "YeastBed2"))
+SequenceComparison
+
+
+```
+
+
+# Detecting binding sites
+
+`DetectBindingSitesMotif` function detects binding sites from provided sequence motif information. Here, HOXA2 and HOXA3 ChIP-seq datasets in mouse branchial arches [@Zarrineh2020] are used to illustrate this function. In the following examples, the sequence motif locations have been detected by Homer [@HOMER] and provided as a bed file called 'HOXHomer_chr19.bed'. The alignment of ChIP-seq short reads is the other input of this function. The alignment files can be passed to the function as bam or bed files. In the following examples HOXA2-BA2, HOXA2-PBA ChIP-seq datasets are passed in the bam paired-end format, while HOXA3-PBA ChIP-seq datasets are passed in the bed single-end format. To make the processing faster, just Chr19 of mouse is considered in these examples.
+
+```{r, message=FALSE, warning=FALSE}
+
+# HOX candidate motifs in Chr19 mouse
+HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed", package="Motif2Site")
+
+# HOXA2 BA2 peak calling from bed file motif - ChIP-seq datasets in bam paired end format
+IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam", package="Motif2Site"))
+INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam", package="Motif2Site"))
+HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_BA2")
+
+# HOXA3 PBA2 peak calling from bed file motif - ChIP-seq datasets in bed single end format
+IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2", package="Motif2Site"))
+INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"))
+HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BEDSE" ,expName = "HOXA3_PBA")
+
+# HOXA2 PBA peak calling from bed file motif - ChIP-seq datasets in bam paired end format - fdrvalue 0.1 to get more regions
+IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam", package="Motif2Site")
+INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam", package="Motif2Site")
+HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_PBA", fdrValue = 0.1)
+
+```
+
+
+`DetectBindingSitesMotif` function also works with DNA string motifs. In the following examples, HOXA2-BA2 and HOXA3-PBA binding sites are detected from 'TGATNNAT' with 1-mismatch motif. HOX in branchial arches always co-binds with MEIS [@Zarrineh2020]. Therefore, in the second example MEIS binding regions are provided as 'GivenRegion' field. Providing this field ensures that binding sites are only detected in the given regions. This will accelerate the peak calling, and also improve the prediction accuracy.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# HOXA2 BA2 peak calling from string motif - ChIP-seq datasets in bam paired end format
+IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam", package="Motif2Site"))
+INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam", package="Motif2Site"))
+HOXA2BA2_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT", mismatchNumber=1, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_BA2_String")
+
+
+# HOXA3 PBA2 peak calling from bed file motif - ChIP-seq datasets in bed single end format
+# peak calling only happens on motifs which are interesected by MEIS binding reigon 
+IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2", package="Motif2Site"))
+INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"))
+Meis_chr19 <- Bed2Granges(system.file("extdata", "Meis_Chr19.bed", package="Motif2Site"))
+HOXA3PBA_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT", mismatchNumber=1, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BEDSE" ,expName = "HOXA3_PBA_String", GivenRegion = Meis_chr19)
+
+```
+
+
+# Combining binding sites across experiments
+
+`recenterBindingSitesAcrossExperiments` function combines the binding sites of different tissues or conditions into a single count matrix. In the HOX example, at the first step it combines HOXA2-BA2, HOXA2-PBA, and HOXA3-PBA binding sites. at the next step, it recalculates the p-adjusted values. To ensure the high quality of the combined binding site set, an stringent cross-experiment FDR cutoff is applied (default 0.001). The accepted binding sites should fullfill this cutoff at least in one experiment. Another FDR cutoff value (default 0.05) is used to assign binding or non-binding labels to each binding site for each experiment. In the HOX example you see that HOX binding sites across branchial arches get more similar across  HOXA2-BA2, HOXA2-PBA, and HOXA3-PBA.
+
+```{r, message=FALSE, warning=FALSE}
+
+# Combine binding sites from a set of motifs in bed format HOXA2 HOXA3 in BAs into a combined table
+# Combine all HOX binding sites into one table 
+coMAT <- recenterBindingSitesAcrossExperiments(expLocations=c("HOXA2_BA2","HOXA2_PBA", "HOXA3_PBA"), experimentNames=c("HOXA2BA2","HOXA2PBA", "HOXA3PBA"),  expName="combinedHOX", fdrValue=0.05, fdrCrossExp = 0.001)
+
+HOXTable <- read.table(paste0(getwd(), "/combinedHOX/CombinedMatrix"), header = TRUE, check.names = FALSE)
+HOXBindingTotal <- GRanges(seqnames=Rle(HOXTable[,1]), ranges = IRanges(HOXTable[,2], HOXTable[,3]))
+HOXA2BA2 <- HOXBindingTotal[which((HOXTable$HOXA2BA2_binding =="Binding")==TRUE)]
+HOXA2PBA <- HOXBindingTotal[which((HOXTable$HOXA2PBA_binding =="Binding")==TRUE)]
+HOXA3PBA <- HOXBindingTotal[which((HOXTable$HOXA3PBA_binding =="Binding")==TRUE)]
+findOverlaps(HOXA2BA2,HOXA2PBA) 
+findOverlaps(HOXA2BA2,HOXA3PBA) 
+findOverlaps(HOXA2PBA,HOXA3PBA) 
+
+```
+
+`pairwisDifferential` function uses edgeR TMM normalization and GLM test to detect differential binding sites across two experiments. In the following example it takes combined HOX count matrix and detect differential binding sites across HOXA2-BA2 and HOXA3-PBA.
+
+```{r, message=FALSE, warning=FALSE}
+
+# Differential binding sites across HOXA2_BA2 and HOXA3_PBA
+diffHOX <- pairwisDifferential(tableOfCountsDir="combinedHOX", exp1="HOXA2BA2", exp2="HOXA3PBA", FDRcutoff = 0.05, logFCcuttoff = 1)
+HOXA2BA2up <- diffHOX[[1]]
+HOXA3PBAup <- diffHOX[[2]]
+TotalComparison <- diffHOX[[3]]
+head(TotalComparison)
+HOXA2BA2up
+HOXA3PBAup
+
+```
+
+```{r echo=FALSE, results='hide',message=FALSE}
+
+# Remove folders
+unlink("HOXA2_BA2", recursive = TRUE)
+unlink("HOXA2_BA2_String", recursive = TRUE)
+unlink("HOXA2_PBA", recursive = TRUE)
+unlink("HOXA3_PBA_String", recursive = TRUE)
+unlink("HOXA3_PBA", recursive = TRUE)
+unlink("combinedHOX", recursive = TRUE)
+```
+
+# Session Info
+```{r sessionInfo}
+sessionInfo()
+```
+
+
+# References
+
