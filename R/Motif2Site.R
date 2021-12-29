@@ -14,12 +14,8 @@
 #'
 #' yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed"
 #'                                , package="Motif2Site")
-#' ex1 <- Bed2Granges(yeastExampleFile)
-#' ex1
-#'
-#' mouseHOXExampleFile = system.file("extdata", "HOX.bed", package="Motif2Site")
-#' ex2 <- Bed2Granges(mouseHOXExampleFile)
-#' ex2
+#' ex <- Bed2Granges(yeastExampleFile)
+#' ex
 #'
 #' @export
 
@@ -287,6 +283,7 @@ compareBedFiless2UserProvidedRegions <-
 #' @param genome The genome name such as "Hsapiens", "Mmusculus",
 #'  "Dmelanogaster"
 #' @param genomeBuild The genome build such as "hg38", "hg19", "mm10", "dm3"
+#' @param DB The database of genome build. default: "UCSC"
 #' @param givenRegion granges of user provided binding regions
 #' @param mainCHRs If true only the major chromosome are considered, if FALSE
 #' Random, Uncharacterised, and Mithocondrial chromosomes are also considered
@@ -308,25 +305,13 @@ compareBedFiless2UserProvidedRegions <-
 #'    )
 #' SequenceComparison
 #'
-#' # HOX ChIP-seq chr19
-#' # install BSgenome.Mmusculus.UCSC.mm10 prior to run this code
-#' mouseHOXExampleFile = system.file("extdata", "HOX.bed", package="Motif2Site")
-#' HOXBranchialArchsChIPseq <- Bed2Granges(mouseHOXExampleFile)
-#' SequenceComparison <- compareMotifs2UserProvidedRegions(
-#'   givenRegion=HOXBranchialArchsChIPseq ,
-#'   motifs = c("TGATNNAT", "WGATNNAT"),
-#'   mismatchNumbers = c(1,1),
-#'   genome="Mmusculus",
-#'   genomeBuild="mm10"
-#'   )
-#' SequenceComparison
 #'
 #' @seealso
 #' \code{\link{compareBedFiless2UserProvidedRegions}}
 #' @export
 
 compareMotifs2UserProvidedRegions <-
-  function(motifs, mismatchNumbers, genome, genomeBuild,
+  function(motifs, mismatchNumbers, genome, genomeBuild, DB="UCSC",
            givenRegion, mainCHRs=TRUE)
 {
 
@@ -343,6 +328,7 @@ compareMotifs2UserProvidedRegions <-
                mismatchNumber=mismatchNumbers[i],
                genome=genome,
                genomeBuild=genomeBuild,
+               DB=DB,
                mainCHRs=mainCHRs,
                firstCHR=FALSE,
                MotifLocationName=paste0("Motif_Locations_",
@@ -454,6 +440,7 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 #' @param genome The genome name such as "Hsapiens", "Mmusculus",
 #'  "Dmelanogaster"
 #' @param genomeBuild The genome build such as "hg38", "hg19", "mm10", "dm3"
+#' @param DB The database of genome build. default: "UCSC"
 #' @param mainCHRs If true only the major chromosome are considered, if FALSE
 #'  Random, Uncharacterised, and Mithocondrial chromosomes are also considered
 #' @param firstCHR If true only Chr1 is used to find motifs. Default is FALSE
@@ -463,18 +450,18 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 #' @return No return value
 
 findMotifs  <-
-  function(motif, mismatchNumber, genome, genomeBuild, mainCHRs=TRUE,
+  function(motif, mismatchNumber, genome, genomeBuild, DB="UCSC", mainCHRs=TRUE,
            firstCHR=FALSE, MotifLocationName="Motif_Locations",
            limitedRegion=NA)
 {
 
-  UCSCstring <- paste("BSgenome.", genome,".UCSC.", genomeBuild,sep="")
-  if (!requireNamespace(UCSCstring, quietly=TRUE))
+  BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
+  if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(UCSCstring, " has not been installed"))
+    stop(paste0(BSGstring, " has not been installed"))
   }
-  loadNamespace(UCSCstring)
-  genome <-  BSgenome::getBSgenome(UCSCstring)
+  loadNamespace(BSGstring)
+  genome <-  BSgenome::getBSgenome(BSGstring)
 
   # Get accepted crhomosome index
   # If mainCHRs == TRUE: remove chrUn, chrM, and randome choromosomes
@@ -581,7 +568,7 @@ findMotifs  <-
 
   Granges2Bed(granges=motifSites, fileName=MotifLocationName)
   rm(motifSites, chrRegions, chrMatchedCase, chrDNA, genome, chrInds,
-     UCSCstring)
+     BSGstring)
   gc() #garbage collection
 }
 
@@ -2161,6 +2148,7 @@ combineTestResults  <-
 #' @param genome The genome name such as "Hsapiens", "Mmusculus",
 #'  "Dmelanogaster"
 #' @param genomeBuild The genome build such as "hg38", "hg19", "mm10", "dm3"
+#' @param DB The database of genome build. default: "UCSC"
 #' @param fdrValue FDR value cut-off
 #' @param windowSize Window size around binding site. The total region would be
 #'  2*windowSize+1
@@ -2170,7 +2158,7 @@ combineTestResults  <-
 
 DetectBindingSites  <-
   function(From, BedFile, motif, mismatchNumber,chipSeq, genome, genomeBuild,
-           fdrValue=0.05, windowSize=100, GivenRegion=NA, currentDir)
+           DB="UCSC", fdrValue=0.05, windowSize=100, GivenRegion=NA, currentDir)
 {
 
   replicateNumber <-  length(chipSeq$IPfiles)
@@ -2183,6 +2171,7 @@ DetectBindingSites  <-
                  mismatchNumber=mismatchNumber,
                  genome=genome,
                  genomeBuild=genomeBuild,
+                 DB=DB,
                  mainCHRs=TRUE,
                  firstCHR=FALSE,
                  MotifLocationName=
@@ -2194,6 +2183,7 @@ DetectBindingSites  <-
                  mismatchNumber=mismatchNumber,
                  genome=genome,
                  genomeBuild=genomeBuild,
+                 DB=DB,
                  mainCHRs=TRUE,
                  firstCHR=FALSE,
                  MotifLocationName=
@@ -2436,6 +2426,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
 #' @param genome The genome name such as "Hsapiens", "Mmusculus",
 #'  "Dmelanogaster"
 #' @param genomeBuild The genome build such as "hg38", "hg19", "mm10", "dm3"
+#' @param DB The database of genome build. default: "UCSC"
 #' @param fdrValue FDR value cut-off
 #' @param expName The name of the output table
 #' @param windowSize Window size around binding site. The total region would be
@@ -2447,63 +2438,25 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
 #'
 #' @examples
 #'
-#' # HOX candidate motifs in Chr19 mouse
-#' HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed",
-#'                          package="Motif2Site")
+#' # FUR candidate motifs in NC_000913 E. coli
+#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
-#' # HOXA2 BA2 peak calling from bed file
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam",
-#'                      package="Motif2Site"),
-#'         system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam",
-#'                     package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam",
-#'                         package="Motif2Site"))
-#' HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE" ,
-#'                                              expName = "HOXA2_BA2"
-#'                                              )
-#'
-#' # HOXA3 PBA2 peak calling from bed file motif
 #' # ChIP-seq datasets in bed single end format
-#' IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"))
-#' HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BEDSE",
-#'                                              expName = "HOXA3_PBA"
-#'                                              )
+#' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+#' Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+#'             system.file("extdata", "Input2.bed", package="Motif2Site"))
+#' FURfeBedInputStats <- 
+#'   DetectBindingSitesBed(BedFile=FurMotifs,
+#'                         IPfiles=IPFe, 
+#'                         BackgroundFiles=Inputs, 
+#'                         genome="Ecoli",
+#'                         genomeBuild="20080805",
+#'                         DB="NCBI",
+#'                         expName="FUR_Fe_BedInput",
+#'                         format="BEDSE"
+#'                        )
 #'
-#' # HOXA2 PBA peak calling from bed file motif
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam",
-#'                    package="Motif2Site")
-#' INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam",
-#'                       package="Motif2Site")
-#' HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE",
-#'                                              expName = "HOXA2_PBA",
-#'                                              fdrValue = 0.1
-#'                                              )
 #'
 #' @seealso
 #' \code{\link{DetectBindingSitesMotif}}
@@ -2511,7 +2464,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
 #' @export
 
 DetectBindingSitesBed <-
-  function(BedFile, IPfiles, BackgroundFiles, genome, genomeBuild,
+  function(BedFile, IPfiles, BackgroundFiles, genome, genomeBuild, DB="UCSC",
            fdrValue=0.05, expName="Motif_Centric_Peaks",windowSize=100,
            format="")
 {
@@ -2554,18 +2507,20 @@ DetectBindingSitesBed <-
     stop("Input format should be to one of BAMPE, BAMSE, BEDPE, or BEDSE ")
   }
 
-  UCSCstring <- paste("BSgenome.", genome,".UCSC.", genomeBuild,sep="")
-  if (!requireNamespace(UCSCstring, quietly=TRUE))
+  BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
+  if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(UCSCstring, " has not been installed"))
+    stop(paste0(BSGstring, " has not been installed"))
   }
 
   currentDir <- getwd()
 
-  if (!file.exists(expName )){
-    dir.create(file.path(currentDir, expName ))
+  if (dir.exists(file.path(currentDir, expName))){
+    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
   }
 
+  dir.create(file.path(currentDir, expName))
+  
   if (!file.exists(file.path(currentDir , expName, "Metadata"))){
     dir.create(file.path(currentDir, expName, "Metadata" ))
   }
@@ -2602,7 +2557,7 @@ DetectBindingSitesBed <-
 
   peakCallingStatistics <- DetectBindingSites(
     From="Bed", BedFile=BedFile,  chipSeq=chipSeq, genome=genome,
-    genomeBuild=genomeBuild, fdrValue=fdrValue, windowSize= windowSize,
+    genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue, windowSize= windowSize,
     currentDir = file.path(currentDir, expName)
     )
 
@@ -2659,6 +2614,7 @@ DetectBindingSitesBed <-
 #' @param genome The genome name such as "Hsapiens", "Mmusculus",
 #'  "Dmelanogaster"
 #' @param genomeBuild The genome build such as "hg38", "hg19", "mm10", "dm3"
+#' @param DB The database of genome build. default: "UCSC"
 #' @param fdrValue FDR value cut-off
 #' @param windowSize Window size around binding site. The total region would be
 #'  2*windowSize+1
@@ -2670,50 +2626,31 @@ DetectBindingSitesBed <-
 #'
 #' @examples
 #'
-#' # HOXA2 BA2 peak calling from string motif
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam",
-#'                      package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam",
-#'                         package="Motif2Site"))
-#' HOXA2BA2_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT",
-#'                                                mismatchNumber=1,
-#'                                                IPfiles = IPs,
-#'                                                BackgroundFiles = INPUTs,
-#'                                                genome="Mmusculus",
-#'                                                genomeBuild="mm10",
-#'                                                format="BAMPE",
-#'                                                expName = "HOXA2_BA2_String"
-#'                                                )
-#'
-#' # HOXA3 PBA2 peak calling from bed file motif
 #' # ChIP-seq datasets in bed single end format
-#' # peak calling only on motifs which are interesected by MEIS binding reigon
-#' IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"))
-#' Meis_chr19 <- Bed2Granges(system.file("extdata", "Meis_Chr19.bed",
-#'                                       package="Motif2Site"))
-#' HOXA3PBA_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT",
-#'                                                mismatchNumber=1,
-#'                                                IPfiles = IPs,
-#'                                                BackgroundFiles = INPUTs,
-#'                                                genome="Mmusculus",
-#'                                                genomeBuild="mm10",
-#'                                                format="BEDSE",
-#'                                                expName = "HOXA3_PBA_String",
-#'                                                GivenRegion = Meis_chr19
-#'                                                )
+#' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+#' Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+#'             system.file("extdata", "Input2.bed", package="Motif2Site"))
 #'
+#'  # Granages region for motif search           
+#'    NC_000913_Coordiante <-
+#'      GenomicRanges::GRanges(seqnames=S4Vectors::Rle("NC_000913"),
+#'                             ranges = IRanges::IRanges(1, 4639675))           
+#'             
+#' FURfeStringInputStats <- 
+#'   DetectBindingSitesMotif(motif = "GWWTGAGAA",
+#'                           mismatchNumber = 1,
+#'                           IPfiles=IPFe, 
+#'                           BackgroundFiles=Inputs, 
+#'                           genome="Ecoli",
+#'                           genomeBuild="20080805",
+#'                           DB= "NCBI",
+#'                           expName="FUR_Fe_StringInput",
+#'                           format="BEDSE",
+#'                           GivenRegion = NC_000913_Coordiante 
+#'                          )
+#'
+#'                                       
 #' @seealso
 #' \code{\link{DetectBindingSitesBed}}
 #'
@@ -2721,7 +2658,7 @@ DetectBindingSitesBed <-
 
 DetectBindingSitesMotif <-
   function(motif, mismatchNumber, IPfiles, BackgroundFiles, genome, genomeBuild,
-           fdrValue=0.05, expName="Motif_Centric_Peaks",
+           DB= "UCSC", fdrValue=0.05, expName="Motif_Centric_Peaks",
            windowSize=100, format="",GivenRegion=NA)
 {
 
@@ -2762,19 +2699,21 @@ DetectBindingSitesMotif <-
     stop("Input format should be to one of BAMPE, BAMSE, BEDPE, or BEDSE ")
   }
 
-  UCSCstring <- paste("BSgenome.", genome,".UCSC.", genomeBuild,sep="")
-  if (!requireNamespace(UCSCstring, quietly=TRUE))
+  BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
+  if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(UCSCstring, " has not been installed"))
+    stop(paste0(BSGstring, " has not been installed"))
   }
 
 
   currentDir <- getwd()
 
-  if (!file.exists(expName )){
-    dir.create(file.path(currentDir, expName ))
+  if (dir.exists(file.path(currentDir, expName))){
+    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
   }
-
+  
+  dir.create(file.path(currentDir, expName))
+  
   if (!file.exists(file.path(currentDir , expName, "Metadata"))){
     dir.create(file.path(currentDir, expName, "Metadata" ))
   }
@@ -2810,14 +2749,14 @@ DetectBindingSitesMotif <-
   {
     peakCallingStatistics <- DetectBindingSites(
       From="Motif", motif=motif, mismatchNumber=mismatchNumber,chipSeq=chipSeq,
-      genome=genome, genomeBuild=genomeBuild, fdrValue=fdrValue,
+      genome=genome, genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue,
       windowSize= windowSize, GivenRegion=GivenRegion,
       currentDir = file.path(currentDir, expName)
       )
   } else {
     peakCallingStatistics <- DetectBindingSites(
       From="Motif", motif=motif, mismatchNumber=mismatchNumber,chipSeq=chipSeq,
-      genome=genome, genomeBuild=genomeBuild, fdrValue=fdrValue,
+      genome=genome, genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue,
       windowSize= windowSize, currentDir = file.path(currentDir, expName)
 
       )
@@ -2875,82 +2814,58 @@ DetectBindingSitesMotif <-
 #'
 #' @examples
 #'
-#' # HOX candidate motifs in Chr19 mouse
-#' HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed",
-#'                         package="Motif2Site")
+#' # FUR candidate motifs in NC_000913 E. coli
+#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
-#' # HOXA2 BA2 peak calling from bed file
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam",
-#'                      package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam",
-#'                         package="Motif2Site"),
-#'            system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam",
-#'                        package="Motif2Site"))
-#' HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE",
-#'                                              expName = "HOXA2_BA2"
-#'                                              )
+#' # ChIP-seq datasets fe in bed single end format
+#' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+#' Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+#'             system.file("extdata", "Input2.bed", package="Motif2Site"))
+#' FURfeBedInputStats <- 
+#'   DetectBindingSitesBed(BedFile=FurMotifs,
+#'                         IPfiles=IPFe, 
+#'                         BackgroundFiles=Inputs, 
+#'                         genome="Ecoli",
+#'                         genomeBuild="20080805",
+#'                         DB="NCBI",
+#'                         expName="FUR_Fe_BedInput",
+#'                         format="BEDSE"
+#'                        )
 #'
-#' # HOXA3 PBA2 peak calling from bed file motif
-#' # ChIP-seq datasets in bed single end format
-#' IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"))
-#' INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"))
-#' HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BEDSE",
-#'                                              expName = "HOXA3_PBA"
-#'                                              )
+#' # ChIP-seq datasets dpd in bed single end format
+#' IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
+#' FURdpdBedInputStats <- 
+#'   DetectBindingSitesBed(BedFile=FurMotifs,
+#'                         IPfiles=IPDpd, 
+#'                         BackgroundFiles=Inputs, 
+#'                         genome="Ecoli",
+#'                         genomeBuild="20080805",
+#'                         DB="NCBI",
+#'                         expName="FUR_Dpd_BedInput",
+#'                         format="BEDSE"
+#'                        )
+#'                        
 #'
-#' # HOXA2 PBA peak calling from bed file motif
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam",
-#'                    package="Motif2Site")
-#' INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam",
-#'                       package="Motif2Site")
-#' HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE",
-#'                                              expName = "HOXA2_PBA",
-#'                                               fdrValue = 0.1
-#'                                               )
-#'
-#' # Combine all HOX binding sites into one table
+#' # Combine all FUR binding sites into one table
 #' corMAT <- recenterBindingSitesAcrossExperiments(
-#'   expLocations=c("HOXA2_BA2","HOXA2_PBA", "HOXA3_PBA"),
-#'   experimentNames=c("HOXA2BA2","HOXA2PBA", "HOXA3PBA"),
-#'   expName="combinedHOX",
-#'   fdrValue=0.05
+#'   expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+#'   experimentNames=c("FUR_Fe","FUR_Dpd"),
+#'   expName="combinedFUR",
 #'   )
 #'
-#' # Differential binding sites across HOXA2_BA2 and HOXA3_PBA
-#' diffHOX <- pairwisDifferential(tableOfCountsDir="combinedHOX",
-#'                                exp1="HOXA2BA2",
-#'                                exp2="HOXA3PBA",
+#' # Differential binding sites across FUR conditions fe vs dpd
+#' diffFUR <- pairwisDifferential(tableOfCountsDir="combinedFUR",
+#'                                exp1="FUR_Fe",
+#'                                exp2="FUR_Dpd",
 #'                                FDRcutoff = 0.05,
 #'                                logFCcuttoff = 1
 #'                                )
-#' HOXA2BA2up <- diffHOX[[1]]
-#' HOXA3PBAup <- diffHOX[[2]]
-#' TotalComparison <- diffHOX[[3]]
+#' 
+#' FeUp <- diffFUR[[1]]
+#' DpdUp <- diffFUR[[2]]
+#' TotalComparison <- diffFUR[[3]]
 #' head(TotalComparison)
 #'
 #' @seealso
@@ -2997,6 +2912,7 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
   notNA <- which(!is.na(rowSums(tableOfCounts)))
   Motifs <-  Motifs[notNA]
   tableOfCounts <- tableOfCounts[notNA,]
+  rownames(tableOfCounts) <- as.character(c(1:dim(tableOfCounts)[1]))
 
   tableOfCounts <- edgeR::DGEList(
     counts = tableOfCounts,
@@ -3056,78 +2972,47 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
 #'
 #' @examples
 #'
-#' # HOX candidate motifs in Chr19 mouse
-#' HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed",
-#'                         package="Motif2Site")
+#' # FUR candidate motifs in NC_000913 E. coli
+#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
-#' # HOXA2 BA2 peak calling from bed file
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam",
-#'             package="Motif2Site")
-#'          )
-#' INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam",
-#'             package="Motif2Site")
-#'             )
-#' HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE",
-#'                                              expName = "HOXA2_BA2"
-#'                                              )
+#' # ChIP-seq datasets fe in bed single end format
+#' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+#' Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+#'             system.file("extdata", "Input2.bed", package="Motif2Site"))
+#' FURfeBedInputStats <- 
+#'   DetectBindingSitesBed(BedFile=FurMotifs,
+#'                         IPfiles=IPFe, 
+#'                         BackgroundFiles=Inputs, 
+#'                         genome="Ecoli",
+#'                         genomeBuild="20080805",
+#'                         DB="NCBI",
+#'                         expName="FUR_Fe_BedInput",
+#'                         format="BEDSE"
+#'                        )
 #'
-#' # HOXA3 PBA2 peak calling from bed file motif
-#' # ChIP-seq datasets in bed single end format
-#' IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2",
-#'                      package="Motif2Site"),
-#'          system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2",
-#'                      package="Motif2Site")
-#'          )
-#' INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site"),
-#'             system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-#'                         package="Motif2Site")
-#'             )
-#' HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BEDSE",
-#'                                              expName = "HOXA3_PBA"
-#'                                              )
+#' # ChIP-seq datasets dpd in bed single end format
+#' IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
+#'         system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
+#' FURdpdBedInputStats <- 
+#'   DetectBindingSitesBed(BedFile=FurMotifs,
+#'                         IPfiles=IPDpd, 
+#'                         BackgroundFiles=Inputs, 
+#'                         genome="Ecoli",
+#'                         genomeBuild="20080805",
+#'                         DB="NCBI",
+#'                         expName="FUR_Dpd_BedInput",
+#'                         format="BEDSE"
+#'                        )
+#'                        
 #'
-#' # HOXA2 PBA peak calling from bed file motif
-#' # ChIP-seq datasets in bam paired end format
-#' IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam", package="Motif2Site")
-#' INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam",
-#'                       package="Motif2Site")
-#' HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-#'                                              IPfiles = IPs,
-#'                                              BackgroundFiles = INPUTs,
-#'                                              genome="Mmusculus",
-#'                                              genomeBuild="mm10",
-#'                                              format="BAMPE",
-#'                                              expName = "HOXA2_PBA",
-#'                                               fdrValue = 0.1
-#'                                               )
-#'
-#' # Combine all HOX binding sites into one table
+#' # Combine all FUR binding sites into one table
 #' corMAT <- recenterBindingSitesAcrossExperiments(
-#'   expLocations=c("HOXA2_BA2","HOXA2_PBA", "HOXA3_PBA"),
-#'   experimentNames=c("HOXA2BA2","HOXA2PBA", "HOXA3PBA"),
-#'   expName="combinedHOX",
-#'   fdrValue=0.05
+#'   expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+#'   experimentNames=c("FUR_Fe","FUR_Dpd"),
+#'   expName="combinedFUR",
 #'   )
 #' corMAT
-#' matFile <- paste0(getwd(), "/combinedHOX/CombinedMatrix")
-#' HOXTable <- read.table(matFile, header = TRUE, check.names = FALSE)
-#' head(HOXTable)
 #'
 #' @seealso
 #' \code{\link{pairwisDifferential}}
@@ -3339,10 +3224,12 @@ recenterBindingSitesAcrossExperiments <-
 
   currentDir <- getwd()
 
-  if (!file.exists(expName )){
-    dir.create(file.path(currentDir, expName ))
+  if (dir.exists(file.path(currentDir, expName))){
+    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
   }
-
+  
+  dir.create(file.path(currentDir, expName))
+  
   dfMotif<- data.frame(
     chr=as.vector(GenomeInfoDb::seqnames(Motifs)),
     start=BiocGenerics::start(Motifs),

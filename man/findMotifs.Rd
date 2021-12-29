@@ -9,6 +9,7 @@ findMotifs(
   mismatchNumber,
   genome,
   genomeBuild,
+  DB = "UCSC",
   mainCHRs = TRUE,
   firstCHR = FALSE,
   MotifLocationName = "Motif_Locations",
@@ -24,6 +25,8 @@ findMotifs(
 "Dmelanogaster"}
 
 \item{genomeBuild}{The genome build such as "hg38", "hg19", "mm10", "dm3"}
+
+\item{DB}{The database of genome build. default: "UCSC"}
 
 \item{mainCHRs}{If true only the major chromosome are considered, if FALSE
 Random, Uncharacterised, and Mithocondrial chromosomes are also considered}

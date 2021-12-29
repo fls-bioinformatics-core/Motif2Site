@@ -12,6 +12,7 @@ DetectBindingSites(
   chipSeq,
   genome,
   genomeBuild,
+  DB = "UCSC",
   fdrValue = 0.05,
   windowSize = 100,
   GivenRegion = NA,
@@ -34,6 +35,8 @@ files}
 "Dmelanogaster"}
 
 \item{genomeBuild}{The genome build such as "hg38", "hg19", "mm10", "dm3"}
+
+\item{DB}{The database of genome build. default: "UCSC"}
 
 \item{fdrValue}{FDR value cut-off}
 

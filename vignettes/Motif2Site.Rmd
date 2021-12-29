@@ -28,6 +28,7 @@ knitr::opts_chunk$set(tidy         = FALSE,
 Motif2Stie is an R package to detect transcription factor binding sites from motif sets and ChIP-seq experiments. The motif sets are either user provided bed files or user provided DNA nucleotide sequence motifs. It also combines and compares binding sites of a transcription factor across various experiments and conditions.
 
 
+
 # Introduction
 
 Transcription factors often bind to specific DNA nucleotide patterns reffered to as sequence motifs. Although sequence motifs are well-characterized for many transcription factors, detecting the actual binding sites is not always a straightforward task. Chromatin immunoprecipitation (ChIP) followed by DNA sequencing (ChIP-seq) is the major technology to detect binding regions of transcription factors. However, the binding regions detected by ChIP-seq may contains several or no DNA sequence motifs. **Motif2Site** is a novel R package which uses ChIP-seq information and detect transcription factor binding sites from a user provided DNA sequence motifs set.
@@ -44,9 +45,10 @@ First install and load the libraries needed to run the examples of this document
 
 ```{r, results="hide", warning=FALSE, message=FALSE}
 
+library(GenomicRanges)
 library(Motif2Site)
 library(BSgenome.Scerevisiae.UCSC.sacCer3)
-library(BSgenome.Mmusculus.UCSC.mm10)
+library(BSgenome.Ecoli.NCBI.20080805)
 
 ```
 
@@ -92,97 +94,136 @@ SequenceComparison
 
 # Detecting binding sites
 
-`DetectBindingSitesMotif` function detects binding sites from provided sequence motif information. Here, HOXA2 and HOXA3 ChIP-seq datasets in mouse branchial arches [@Zarrineh2020] are used to illustrate this function. In the following examples, the sequence motif locations have been detected by Homer [@HOMER] and provided as a bed file called 'HOXHomer_chr19.bed'. The alignment of ChIP-seq short reads is the other input of this function. The alignment files can be passed to the function as bam or bed files. In the following examples HOXA2-BA2, HOXA2-PBA ChIP-seq datasets are passed in the bam paired-end format, while HOXA3-PBA ChIP-seq datasets are passed in the bed single-end format. To make the processing faster, just Chr19 of mouse is considered in these examples.
+`DetectBindingSitesMotif` function detects binding sites from provided sequence motif information. Here, Artificial ChIP-seq data for FUR transcription factor in Escherichia coli was generated in two conditions fe2+ and dpd inspired by [@Seo2014]. In the following examples, artificial sequence motif locations have been and provided as a bed file called 'FurMotifs.bed'. The alignment of ChIP-seq short reads is the other input of this function. The alignment files can be passed to the function as bam or bed files. In the following examples both IP and background alignment files have been passed as single-end bed files to this function.
 
 ```{r, message=FALSE, warning=FALSE}
 
-# HOX candidate motifs in Chr19 mouse
-HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed", package="Motif2Site")
+# FUR candidate motifs in NC_000913 E. coli
+FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 
-# HOXA2 BA2 peak calling from bed file motif - ChIP-seq datasets in bam paired end format
-IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam", package="Motif2Site"))
-INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam", package="Motif2Site"))
-HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_BA2")
+# ChIP-seq FUR fe datasets binding sites from user provided bed file 
+# ChIP-seq datasets in bed single end format
 
-# HOXA3 PBA2 peak calling from bed file motif - ChIP-seq datasets in bed single end format
-IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2", package="Motif2Site"))
-INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"))
-HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BEDSE" ,expName = "HOXA3_PBA")
+IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+          system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+            system.file("extdata", "Input2.bed", package="Motif2Site"))
+FURfeBedInputStats <- 
+  DetectBindingSitesBed(BedFile=FurMotifs,
+                        IPfiles=IPFe, 
+                        BackgroundFiles=Inputs, 
+                        genome="Ecoli",
+                        genomeBuild="20080805",
+                        DB="NCBI",
+                        expName="FUR_Fe_BedInput",
+                        format="BEDSE"
+                        )
+FURfeBedInputStats
 
-# HOXA2 PBA peak calling from bed file motif - ChIP-seq datasets in bam paired end format - fdrvalue 0.1 to get more regions
-IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam", package="Motif2Site")
-INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam", package="Motif2Site")
-HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_PBA", fdrValue = 0.1)
+# ChIP-seq FUR dpd datasets binding sites from user provided bed file 
+# ChIP-seq datasets in bed single end format
+
+IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
+           system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
+FURdpdBedInputStats <- 
+  DetectBindingSitesBed(BedFile=FurMotifs,
+                        IPfiles=IPDpd, 
+                        BackgroundFiles=Inputs, 
+                        genome="Ecoli",
+                        genomeBuild="20080805",
+                        DB="NCBI",
+                        expName="FUR_Dpd_BedInput",
+                        format="BEDSE"
+                        )
+FURdpdBedInputStats
 
 ```
 
 
-`DetectBindingSitesMotif` function also works with DNA string motifs. In the following examples, HOXA2-BA2 and HOXA3-PBA binding sites are detected from 'TGATNNAT' with 1-mismatch motif. HOX in branchial arches always co-binds with MEIS [@Zarrineh2020]. Therefore, in the second example MEIS binding regions are provided as 'GivenRegion' field. Providing this field ensures that binding sites are only detected in the given regions. This will accelerate the peak calling, and also improve the prediction accuracy.
-
+`DetectBindingSitesMotif` function also works with DNA string motifs. In the following example, FUR binding sites in fe2+ condition are detected from 'GWWTGAGAA' with 1-mismatch motif. The dataset is generated only for 'NC_000913' build. Therefore, in this example the coordinates of this regions are provided as a 'GivenRegion' field. Providing this field ensures that binding sites are only detected in the given regions. This will accelerate the peak calling, and also improve the prediction accuracy.
 
 ```{r, message=FALSE, warning=FALSE}
 
-# HOXA2 BA2 peak calling from string motif - ChIP-seq datasets in bam paired end format
-IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam", package="Motif2Site"))
-INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam", package="Motif2Site"), system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam", package="Motif2Site"))
-HOXA2BA2_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT", mismatchNumber=1, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BAMPE" ,expName = "HOXA2_BA2_String")
 
+# Granages region for motif search           
+NC_000913_Coordiante <- GRanges(seqnames=Rle("NC_000913"),
+                                ranges = IRanges(1, 4639675))           
 
-# HOXA3 PBA2 peak calling from bed file motif - ChIP-seq datasets in bed single end format
-# peak calling only happens on motifs which are interesected by MEIS binding reigon 
-IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2", package="Motif2Site"))
-INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"), system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2", package="Motif2Site"))
-Meis_chr19 <- Bed2Granges(system.file("extdata", "Meis_Chr19.bed", package="Motif2Site"))
-HOXA3PBA_statistics <- DetectBindingSitesMotif(motif= "TGATNNAT", mismatchNumber=1, IPfiles = IPs, BackgroundFiles = INPUTs, genome="Mmusculus",  genomeBuild="mm10", format="BEDSE" ,expName = "HOXA3_PBA_String", GivenRegion = Meis_chr19)
+# ChIP-seq FUR fe datasets binding sites from user provided string motif
+# ChIP-seq datasets in bed single end format
+           
+FURfeStringInputStats <- 
+  DetectBindingSitesMotif(motif = "GWWTGAGAA",
+                          mismatchNumber = 1,
+                          IPfiles=IPFe, 
+                          BackgroundFiles=Inputs, 
+                          genome="Ecoli",
+                          genomeBuild="20080805",
+                          DB= "NCBI",
+                          expName="FUR_Fe_StringInput",
+                          format="BEDSE",
+                          GivenRegion = NC_000913_Coordiante 
+                          )
+FURfeStringInputStats
 
 ```
 
 
 # Combining binding sites across experiments
 
-`recenterBindingSitesAcrossExperiments` function combines the binding sites of different tissues or conditions into a single count matrix. In the HOX example, at the first step it combines HOXA2-BA2, HOXA2-PBA, and HOXA3-PBA binding sites. at the next step, it recalculates the p-adjusted values. To ensure the high quality of the combined binding site set, an stringent cross-experiment FDR cutoff is applied (default 0.001). The accepted binding sites should fullfill this cutoff at least in one experiment. Another FDR cutoff value (default 0.05) is used to assign binding or non-binding labels to each binding site for each experiment. In the HOX example you see that HOX binding sites across branchial arches get more similar across  HOXA2-BA2, HOXA2-PBA, and HOXA3-PBA.
+`recenterBindingSitesAcrossExperiments` function combines the binding sites of different tissues or conditions into a single count matrix. In the FUR example, at the first step it combines fe2+ and dpd binding sites. At the next step, it recalculates the p-adjusted values. To ensure the high quality of the combined binding site set, an stringent cross-experiment FDR cutoff is applied (default 0.001). The accepted binding sites should fullfill this cutoff at least in one experiment. Another FDR cutoff value (default 0.05) is used to assign binding or non-binding labels to each binding site for each experiment. 
 
 ```{r, message=FALSE, warning=FALSE}
 
-# Combine binding sites from a set of motifs in bed format HOXA2 HOXA3 in BAs into a combined table
-# Combine all HOX binding sites into one table 
-coMAT <- recenterBindingSitesAcrossExperiments(expLocations=c("HOXA2_BA2","HOXA2_PBA", "HOXA3_PBA"), experimentNames=c("HOXA2BA2","HOXA2PBA", "HOXA3PBA"),  expName="combinedHOX", fdrValue=0.05, fdrCrossExp = 0.001)
+# Combine FUR binding sites from bed input into one table 
+corMAT <- recenterBindingSitesAcrossExperiments(
+  expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+  experimentNames=c("FUR_Fe","FUR_Dpd"),
+  expName="combinedFUR"
+  )
+corMAT
 
-HOXTable <- read.table(paste0(getwd(), "/combinedHOX/CombinedMatrix"), header = TRUE, check.names = FALSE)
-HOXBindingTotal <- GRanges(seqnames=Rle(HOXTable[,1]), ranges = IRanges(HOXTable[,2], HOXTable[,3]))
-HOXA2BA2 <- HOXBindingTotal[which((HOXTable$HOXA2BA2_binding =="Binding")==TRUE)]
-HOXA2PBA <- HOXBindingTotal[which((HOXTable$HOXA2PBA_binding =="Binding")==TRUE)]
-HOXA3PBA <- HOXBindingTotal[which((HOXTable$HOXA3PBA_binding =="Binding")==TRUE)]
-findOverlaps(HOXA2BA2,HOXA2PBA) 
-findOverlaps(HOXA2BA2,HOXA3PBA) 
-findOverlaps(HOXA2PBA,HOXA3PBA) 
+FurTable <- 
+  read.table(file.path("combinedFUR","CombinedMatrix"), 
+             header = TRUE,
+              check.names = FALSE
+             )
+FurBindingTotal <- 
+  GRanges(seqnames=Rle(FurTable[,1]), 
+          ranges = IRanges(FurTable[,2], FurTable[,3])
+          )
+FurFe <- FurBindingTotal[which((FurTable$FUR_Fe_binding =="Binding")==TRUE)]
+FurDpd <- FurBindingTotal[which((FurTable$FUR_Dpd_binding =="Binding")==TRUE)]
+findOverlaps(FurFe,FurDpd) 
 
 ```
 
-`pairwisDifferential` function uses edgeR TMM normalization and GLM test to detect differential binding sites across two experiments. In the following example it takes combined HOX count matrix and detect differential binding sites across HOXA2-BA2 and HOXA3-PBA.
+`pairwisDifferential` function uses edgeR TMM normalization and GLM test to detect differential binding sites across two experiments. In the following example it takes combined FUR count matrix and detect differential binding sites across fe2+ and dpd.
 
 ```{r, message=FALSE, warning=FALSE}
 
-# Differential binding sites across HOXA2_BA2 and HOXA3_PBA
-diffHOX <- pairwisDifferential(tableOfCountsDir="combinedHOX", exp1="HOXA2BA2", exp2="HOXA3PBA", FDRcutoff = 0.05, logFCcuttoff = 1)
-HOXA2BA2up <- diffHOX[[1]]
-HOXA3PBAup <- diffHOX[[2]]
-TotalComparison <- diffHOX[[3]]
+# Differential binding sites across FUR conditions fe vs dpd
+diffFUR <- pairwisDifferential(tableOfCountsDir="combinedFUR",
+                              exp1="FUR_Fe",
+                              exp2="FUR_Dpd",
+                              FDRcutoff = 0.05,
+                              logFCcuttoff = 1
+                              )
+FeUp <- diffFUR[[1]]
+DpdUp <- diffFUR[[2]]
+TotalComparison <- diffFUR[[3]]
 head(TotalComparison)
-HOXA2BA2up
-HOXA3PBAup
+
 
 ```
 
 ```{r echo=FALSE, results='hide',message=FALSE}
 
 # Remove folders
-unlink("HOXA2_BA2", recursive = TRUE)
-unlink("HOXA2_BA2_String", recursive = TRUE)
-unlink("HOXA2_PBA", recursive = TRUE)
-unlink("HOXA3_PBA_String", recursive = TRUE)
-unlink("HOXA3_PBA", recursive = TRUE)
-unlink("combinedHOX", recursive = TRUE)
+unlink("FUR_Fe_BedInput", recursive = TRUE)
+unlink("FUR_Dpd_BedInput", recursive = TRUE)
+unlink("FUR_Fe_StringInput", recursive = TRUE)
+unlink("combinedFUR", recursive = TRUE)
 ```
 
 # Session Info

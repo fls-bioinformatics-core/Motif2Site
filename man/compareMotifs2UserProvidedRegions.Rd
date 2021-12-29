@@ -9,6 +9,7 @@ compareMotifs2UserProvidedRegions(
   mismatchNumbers,
   genome,
   genomeBuild,
+  DB = "UCSC",
   givenRegion,
   mainCHRs = TRUE
 )
@@ -23,6 +24,8 @@ motifs}
 "Dmelanogaster"}
 
 \item{genomeBuild}{The genome build such as "hg38", "hg19", "mm10", "dm3"}
+
+\item{DB}{The database of genome build. default: "UCSC"}
 
 \item{givenRegion}{granges of user provided binding regions}
 
@@ -60,18 +63,6 @@ YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
    )
 SequenceComparison
 
-# HOX ChIP-seq chr19
-# install BSgenome.Mmusculus.UCSC.mm10 prior to run this code
-mouseHOXExampleFile = system.file("extdata", "HOX.bed", package="Motif2Site")
-HOXBranchialArchsChIPseq <- Bed2Granges(mouseHOXExampleFile)
-SequenceComparison <- compareMotifs2UserProvidedRegions(
-  givenRegion=HOXBranchialArchsChIPseq ,
-  motifs = c("TGATNNAT", "WGATNNAT"),
-  mismatchNumbers = c(1,1),
-  genome="Mmusculus",
-  genomeBuild="mm10"
-  )
-SequenceComparison
 
 }
 \seealso{

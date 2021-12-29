@@ -35,80 +35,78 @@ tissue and combines/compares them:
 
 ```
 library(Motif2Site)
-library(BSgenome.Mmusculus.UCSC.mm10)
+library(BSgenome.Ecoli.NCBI.20080805)
 
-# HOX candidate motifs in Chr19 mouse
-HOXMotifs = system.file("extdata", "HOXHomer_chr19.bed",
-                        package="Motif2Site")
+# FUR candidate motifs in NC_000913 E. coli
+FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 
-# HOXA2 BA2 peak calling from bed file
-# ChIP-seq datasets in bam paired end format
-IPs <- c(system.file("extdata", "HOXA2_BA2_rep1_IP_chr19.bam",
-                     package="Motif2Site"),
-         system.file("extdata", "HOXA2_BA2_rep2_IP_chr19.bam",
-            package="Motif2Site")
-         )
-INPUTs <- c(system.file("extdata", "HOXA2_BA2_rep1_INPUT_chr19.bam",
-                        package="Motif2Site"),
-            system.file("extdata", "HOXA2_BA2_rep2_INPUT_chr19.bam",
-            package="Motif2Site")
-            )
-HOXA2BA2_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-                                             IPfiles = IPs,
-                                             BackgroundFiles = INPUTs,
-                                             genome="Mmusculus",
-                                             genomeBuild="mm10",
-                                             format="BAMPE",
-                                             expName = "HOXA2_BA2"
-                                             )
-
-# HOXA3 PBA2 peak calling from bed file motif
+# ChIP-seq FUR fe datasets binding sites from user provided bed file 
 # ChIP-seq datasets in bed single end format
-IPs <- c(system.file("extdata", "HOXA3_PBA_rep1_IP_chr19.bed.bz2",
-                     package="Motif2Site"),
-         system.file("extdata", "HOXA3_PBA_rep2_IP_chr19.bed.bz2",
-                     package="Motif2Site")
-         )
-INPUTs <- c(system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-                        package="Motif2Site"),
-            system.file("extdata", "HOXA3_PBA_rep1_INPUT_chr19.bed.bz2",
-                        package="Motif2Site")
-            )
-HOXA3PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-                                             IPfiles = IPs,
-                                             BackgroundFiles = INPUTs,
-                                             genome="Mmusculus",
-                                             genomeBuild="mm10",
-                                             format="BEDSE",
-                                             expName = "HOXA3_PBA"
-                                             )
 
-# HOXA2 PBA peak calling from bed file motif
-# ChIP-seq datasets in bam paired end format
-IPs <- system.file("extdata","HOXA2_PBA_IP_chr19.bam", package="Motif2Site")
-INPUTs <- system.file("extdata","HOXA2_PBA_INPUT_chr19.bam",
-                      package="Motif2Site")
-HOXA2PBA_statistics <- DetectBindingSitesBed(BedFile= HOXMotifs,
-                                             IPfiles = IPs,
-                                             BackgroundFiles = INPUTs,
-                                             genome="Mmusculus",
-                                             genomeBuild="mm10",
-                                             format="BAMPE",
-                                             expName = "HOXA2_PBA",
-                                              fdrValue = 0.1
-                                              )
+IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
+          system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
+Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+            system.file("extdata", "Input2.bed", package="Motif2Site"))
+FURfeBedInputStats <- 
+  DetectBindingSitesBed(BedFile=FurMotifs,
+                        IPfiles=IPFe, 
+                        BackgroundFiles=Inputs, 
+                        genome="Ecoli",
+                        genomeBuild="20080805",
+                        DB="NCBI",
+                        expName="FUR_Fe_BedInput",
+                        format="BEDSE"
+                        )
 
-# Combine all HOX binding sites into one table
+# ChIP-seq FUR dpd datasets binding sites from user provided bed file 
+# ChIP-seq datasets in bed single end format
+
+IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
+           system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
+FURdpdBedInputStats <- 
+  DetectBindingSitesBed(BedFile=FurMotifs,
+                        IPfiles=IPDpd, 
+                        BackgroundFiles=Inputs, 
+                        genome="Ecoli",
+                        genomeBuild="20080805",
+                        DB="NCBI",
+                        expName="FUR_Dpd_BedInput",
+                        format="BEDSE"
+                        )
+
+# Combine FUR binding sites from bed input into one table 
 corMAT <- recenterBindingSitesAcrossExperiments(
-  expLocations=c("HOXA2_BA2","HOXA2_PBA", "HOXA3_PBA"),
-  experimentNames=c("HOXA2BA2","HOXA2PBA", "HOXA3PBA"),
-  expName="combinedHOX",
-  fdrValue=0.05
+  expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+  experimentNames=c("FUR_Fe","FUR_Dpd"),
+  expName="combinedFUR"
   )
 corMAT
-matFile <- paste0(getwd(), "/combinedHOX/CombinedMatrix")
-HOXTable <- read.table(matFile, header = TRUE, check.names = FALSE)
-head(HOXTable)
+
+FurTable <- 
+  read.table(file.path("combinedFUR","CombinedMatrix"), 
+             header = TRUE,
+             check.names = FALSE
+             )
+FurBindingTotal <- 
+  GRanges(seqnames=Rle(FurTable[,1]), 
+          ranges = IRanges(FurTable[,2], FurTable[,3])
+          )
+FurFe <- FurBindingTotal[which((FurTable$FUR_Fe_binding =="Binding")==TRUE)]
+FurDpd <- FurBindingTotal[which((FurTable$FUR_Dpd_binding =="Binding")==TRUE)]
+findOverlaps(FurFe,FurDpd) 
+
+
+# Differential binding sites across FUR conditions fe vs dpd
+diffFUR <- pairwisDifferential(tableOfCountsDir="combinedFUR",
+                              exp1="FUR_Fe",
+                              exp2="FUR_Dpd",
+                              FDRcutoff = 0.05,
+                              logFCcuttoff = 1
+                              )
+FeUp <- diffFUR[[1]]
+DpdUp <- diffFUR[[2]]
+TotalComparison <- diffFUR[[3]]
+head(TotalComparison)
 
 
 ```
