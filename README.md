@@ -21,11 +21,14 @@ conditions.
 
 ## Installation
 
-You can install the released version of Motif2Site from 
-[github](https://github.com/ManchesterBioinference/Motif2Site) with:
+To install this package, start R (version "4.1") and enter:
 
 ``` 
-devtools::install_github("ManchesterBioinference/Motif2Site")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("Motif2Site")
+
 ```
 
 ## Example

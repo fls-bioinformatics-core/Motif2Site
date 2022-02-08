@@ -68,20 +68,20 @@ Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
  # Granages region for motif search           
    NC_000913_Coordiante <-
      GenomicRanges::GRanges(seqnames=S4Vectors::Rle("NC_000913"),
-                            ranges = IRanges::IRanges(1, 4639675))           
+                            ranges=IRanges::IRanges(1, 4639675))           
             
 FURfeStringInputStats <- 
-  DetectBindingSitesMotif(motif = "GWWTGAGAA",
-                          mismatchNumber = 1,
-                          IPfiles=IPFe, 
-                          BackgroundFiles=Inputs, 
-                          genome="Ecoli",
-                          genomeBuild="20080805",
-                          DB= "NCBI",
-                          expName="FUR_Fe_StringInput",
-                          format="BEDSE",
-                          GivenRegion = NC_000913_Coordiante 
-                         )
+  DetectBindingSitesMotif(motif="GWWTGAGAA",
+   mismatchNumber=1,
+   IPfiles=IPFe, 
+   BackgroundFiles=Inputs, 
+   genome="Ecoli",
+   genomeBuild="20080805",
+   DB="NCBI",
+   expName="FUR_Fe_StringInput",
+   format="BEDSE",
+   GivenRegion=NC_000913_Coordiante 
+   )
 
                                       
 }

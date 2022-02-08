@@ -1,3 +1,17 @@
+# Motif2Site 0.99.2
+
++ Update readme by Bioconductor installation instructions using BiocManager
++ Update description by adding R>=4.1 as dependency
++ Update description by adding BugReports link 
++ Update description by changing lazyDate to false
++ Update Vignettes by fixing typos, abstract, and author
++ Update Vignettes by using BiocStyle and keeping code lines under 80 character 
++ Improve coding style
++ Fixing some of the build notes
++ Adding Motif2Site.Rd with a complete example
+
+
+
 # Motif2Site 0.99.1
 
 + All HOX-mouse samples are replaced with FUR-Ecoli ones

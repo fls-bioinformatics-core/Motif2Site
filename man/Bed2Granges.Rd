@@ -17,8 +17,8 @@ Read a bed file as Genomic Ranges.
 }
 \examples{
 
-yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed"
-                               , package="Motif2Site")
+yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
+     package="Motif2Site")
 ex <- Bed2Granges(yeastExampleFile)
 ex
 

@@ -12,8 +12,8 @@
 #' @return granges format of given coordinates
 #' @examples
 #'
-#' yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed"
-#'                                , package="Motif2Site")
+#' yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
+#'      package="Motif2Site")
 #' ex <- Bed2Granges(yeastExampleFile)
 #' ex
 #'
@@ -22,7 +22,7 @@
 Bed2Granges  <- function(fileName) {
 
   if (!(file.exists(fileName))){
-    stop(paste0(fileName, " file does not exist"))
+    stop(fileName, " file does not exist")
   }
 
   Table <- utils::read.table(fileName, header=FALSE, stringsAsFactors=FALSE)
@@ -32,17 +32,17 @@ Bed2Granges  <- function(fileName) {
     stop("Bed files must have at least three columns")
   }
 
-  if (!(typeof(Table[,2])== "integer")){
+  if (!(typeof(Table[,2])=="integer")){
     stop("The second column of a bed file must be an integer")
   }
 
-  if (!(typeof(Table[,3])== "integer")){
+  if (!(typeof(Table[,3])=="integer")){
     stop("The third column of a bed file must be an integer")
   }
 
   granges <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(Table[,1]),
-    ranges = IRanges::IRanges(Table[,2], Table[,3]))
+    ranges=IRanges::IRanges(Table[,2], Table[,3]))
   rm(Table)
   gc()
   return(granges)
@@ -83,7 +83,7 @@ DeleteMultipleFiles <- function(files)
 
   if(fileNumber>0)
   {
-    for (i in c(1:fileNumber))
+    for (i in seq_len(fileNumber))
     {
       if(file.exists(files[i]))
         file.remove(files[i])
@@ -110,7 +110,7 @@ CompareBeds2GivenRegions <- function(motifName, bindingRegions)
 
   combinedRanges <- Bed2Granges("combinedRanges.bed")
   combinedMatrix <- utils::read.table("combinedMatrix",
-                                      header = FALSE,
+                                      header=FALSE,
                                       stringsAsFactors=FALSE
                                       )
   combinedOverlap <- GenomicRanges::findOverlaps(combinedRanges,bindingRegions)
@@ -118,9 +118,9 @@ CompareBeds2GivenRegions <- function(motifName, bindingRegions)
   motifNameNumber <- length(motifName)
   if(motifNameNumber>0)
   {
-    regionCoverage <-  c(1:motifNameNumber) * 0
-    motifCoverage <-  c(1:motifNameNumber) * 0
-    for (i in c(1:motifNameNumber))
+    regionCoverage <-  seq_len(motifNameNumber) * 0
+    motifCoverage <-  seq_len(motifNameNumber) * 0
+    for (i in seq_len(motifNameNumber))
     {
       motifBindingInds <- which((combinedMatrix[,i]==1)==TRUE)
       rowsIndices <- which((match(S4Vectors::queryHits(combinedOverlap),
@@ -135,19 +135,19 @@ CompareBeds2GivenRegions <- function(motifName, bindingRegions)
 
     graphics::plot(motifCoverage,
                    regionCoverage,
-                   ylim= c(0,1),
-                   xlim= c(min(motifCoverage)-(min(motifCoverage)/3),
+                   ylim=c(0,1),
+                   xlim=c(min(motifCoverage)-(min(motifCoverage)/3),
                            (max(motifCoverage)+(max(motifCoverage)/3))),
-                   ylab = 'Recall region based',
-                   xlab = 'Precision motif based',
-                   main = 'motif vs given regions'
+                   ylab='Recall region based',
+                   xlab='Precision motif based',
+                   main='motif vs given regions'
     )
-    graphics::abline(h=0.95, col = "red", lty=2, lwd=3)
+    graphics::abline(h=0.95, col="red", lty=2, lwd=3)
     graphics::text(motifCoverage,regionCoverage, motifName, pos=4)
 
-    motifsAnalysis <- data.frame(motifName= motifName,
-                                 regionCoverage = regionCoverage,
-                                 motifCoverage= motifCoverage
+    motifsAnalysis <- data.frame(motifName=motifName,
+                                 regionCoverage=regionCoverage,
+                                 motifCoverage=motifCoverage
     )
 
     rm(combinedRanges, combinedMatrix, combinedOverlap, regionCoverage,
@@ -156,9 +156,9 @@ CompareBeds2GivenRegions <- function(motifName, bindingRegions)
 
   } else
   {
-    motifsAnalysis <- data.frame(motifName= "",
-                                 regionCoverage = 0,
-                                 motifCoverage= 0
+    motifsAnalysis <- data.frame(motifName="",
+                                 regionCoverage=0,
+                                 motifCoverage=0
     )
   }
 
@@ -181,28 +181,28 @@ combineMotifFiles <- function(motifFileNames, motifType="BioString"){
 
   motifFileNamesNumber <- length(motifFileNames)
 
-  for(i in c(1:motifFileNamesNumber))
+  for(i in seq_len(motifFileNamesNumber))
   {
     if(!(file.exists(motifFileNames[i])))
     {
-      stop( paste0(motifFileNames[i]," does not exist"))
+      stop(motifFileNames[i]," does not exist")
     }
   }
 
   if(motifFileNamesNumber>0)
   {
     combinedRanges <- GenomicRanges::GRanges()
-    for (i in c(1:motifFileNamesNumber))
+    for (i in seq_len(motifFileNamesNumber))
     {
       assign(paste0("granges_",i), Bed2Granges(motifFileNames[i]))
       combinedRanges <- c(combinedRanges, get(paste0("granges_",i)))
     }
     combinedRanges <- GenomicRanges::reduce(combinedRanges)
     combinedMatrix <- matrix(0,
-                             nrow =length(combinedRanges) ,
-                             ncol = length(motifFileNames)
+                             nrow=length(combinedRanges),
+                             ncol=length(motifFileNames)
     )
-    for (i in c(1:motifFileNamesNumber))
+    for (i in seq_len(motifFileNamesNumber))
     {
       combinedMatrix[S4Vectors::subjectHits(
         GenomicRanges::findOverlaps(get(paste0("granges_",i)),combinedRanges)),
@@ -239,17 +239,17 @@ combineMotifFiles <- function(motifFileNames, motifType="BioString"){
 #' @return A dataframe which includes precision recall values for each bed file
 #' @examples
 #'
-#'yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed",
+#'yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
 #'                               package="Motif2Site")
 #' YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
 #' bed1 <- system.file("extdata", "YeastBedFile1.bed", package="Motif2Site")
 #' bed2 <- system.file("extdata", "YeastBedFile2.bed", package="Motif2Site")
 #' BedFilesVector <- c(bed1, bed2)
 #' SequenceComparison <- compareBedFiless2UserProvidedRegions(
-#'    givenRegion=YeastRegionsChIPseq,
-#'    bedfiles = BedFilesVector,
-#'    motifnames = c("YeastBed1", "YeastBed2")
-#'    )
+#'      givenRegion=YeastRegionsChIPseq,
+#'      bedfiles=BedFilesVector,
+#'      motifnames=c("YeastBed1", "YeastBed2")
+#'      )
 #' SequenceComparison
 #'
 #' @seealso
@@ -293,13 +293,13 @@ compareBedFiless2UserProvidedRegions <-
 #'
 #' # Artificial example in Yeast
 #' # install BSgenome.Scerevisiae.UCSC.sacCer3 prior to run this code
-#'  yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed",
+#'  yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
 #'                                 package="Motif2Site")
 #' YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
-#'  SequenceComparison <- compareMotifs2UserProvidedRegions(
+#' SequenceComparison <- compareMotifs2UserProvidedRegions(
 #'    givenRegion=YeastRegionsChIPseq,
-#'    motifs = c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"),
-#'    mismatchNumbers = c(1,0,2),
+#'    motifs=c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"),
+#'    mismatchNumbers=c(1,0,2),
 #'    genome="Scerevisiae",
 #'    genomeBuild="sacCer3"
 #'    )
@@ -322,7 +322,7 @@ compareMotifs2UserProvidedRegions <-
     stop("Motifs and mismatchNumber vectors must have the same length")
   }
 
-  for (i in c(1: motifsNumber))
+  for (i in seq_len(motifsNumber))
   {
     findMotifs(motif=motifs[i],
                mismatchNumber=mismatchNumbers[i],
@@ -335,8 +335,8 @@ compareMotifs2UserProvidedRegions <-
                                         motifs[i], "_",mismatchNumbers[i])
                )
   }
-  fileNames <- vector(mode = "character", length = motifsNumber)
-  for (i in c(1:motifsNumber))
+  fileNames <- vector(mode="character", length=motifsNumber)
+  for (i in seq_len(motifsNumber))
   {
     fileNames[i] <- paste0("Motif_Locations_",motifs[i], "_",mismatchNumbers[i])
   }
@@ -367,7 +367,7 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 
   combinedRanges <- Bed2Granges("combinedRanges.bed")
   combinedMatrix <- utils::read.table("combinedMatrix",
-                                      header = FALSE,
+                                      header=FALSE,
                                       stringsAsFactors=FALSE
                                       )
   combinedOverlap <- GenomicRanges::findOverlaps(combinedRanges,bindingRegions)
@@ -375,10 +375,10 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 
   if(motifNumber>0)
   {
-    regionCoverage <-  c(1:motifNumber) * 0
-    motifCoverage <-  c(1:motifNumber) * 0
+    regionCoverage <-  seq_len(motifNumber) * 0
+    motifCoverage <-  seq_len(motifNumber) * 0
     motifName <- as.character(motifs)
-    for (i in c(1:motifNumber))
+    for (i in seq_len(motifNumber))
     {
       motifBindingInds <- which((combinedMatrix[,i]==1)==TRUE)
       rowsIndices <- which((match(S4Vectors::queryHits(combinedOverlap),
@@ -395,19 +395,19 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 
     graphics::plot(motifCoverage,
                    regionCoverage,
-                   ylim= c(0,1),
-                   xlim= c(min(motifCoverage)-(min(motifCoverage)/3),
+                   ylim=c(0,1),
+                   xlim=c(min(motifCoverage)-(min(motifCoverage)/3),
                            (max(motifCoverage)+(max(motifCoverage)/3))),
-                   ylab = 'Recall region based',
-                   xlab = 'Precision motif based',
-                   main = 'motif vs given regions'
+                   ylab='Recall region based',
+                   xlab='Precision motif based',
+                   main='motif vs given regions'
     )
-    graphics::abline(h=0.95, col = "red", lty=2, lwd=3)
+    graphics::abline(h=0.95, col="red", lty=2, lwd=3)
     graphics::text(motifCoverage,regionCoverage, motifName, pos=4)
 
-    motifsAnalysis <- data.frame(motifName= motifName,
-                                 regionCoverage = regionCoverage,
-                                 motifCoverage= motifCoverage
+    motifsAnalysis <- data.frame(motifName=motifName,
+                                 regionCoverage=regionCoverage,
+                                 motifCoverage=motifCoverage
     )
 
     rm(combinedRanges, combinedMatrix, combinedOverlap, regionCoverage,
@@ -417,9 +417,9 @@ CompareMotifs2GivenRegions  <- function(motifs, mismatchNumbers, bindingRegions)
 
   } else
   {
-    motifsAnalysis <- data.frame(motifName= "",
-                                 regionCoverage = 0,
-                                 motifCoverage= 0
+    motifsAnalysis <- data.frame(motifName="",
+                                 regionCoverage=0,
+                                 motifCoverage=0
     )
 
   }
@@ -458,16 +458,16 @@ findMotifs  <-
   BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
   if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(BSGstring, " has not been installed"))
+    stop(BSGstring, " has not been installed")
   }
   loadNamespace(BSGstring)
   genome <-  BSgenome::getBSgenome(BSGstring)
 
   # Get accepted crhomosome index
-  # If mainCHRs == TRUE: remove chrUn, chrM, and randome choromosomes
+  # If mainCHRs==TRUE: remove chrUn, chrM, and randome choromosomes
 
   ChromosomeNumber <- length(GenomeInfoDb::seqnames(genome))
-  chrInds <- c(1:ChromosomeNumber)
+  chrInds <- seq_len(ChromosomeNumber)
   if(mainCHRs==TRUE)
   {
     chrInds <-
@@ -487,7 +487,7 @@ findMotifs  <-
     ChrNumber <- length(chrInds)
     if(ChrNumber>0)
     {
-      for (i in c(1:ChrNumber))
+      for (i in seq_len(ChrNumber))
       {
         chrDNA <-
           Biostrings::maskMotif(
@@ -495,28 +495,28 @@ findMotifs  <-
               text=paste("genome$",
                          as.character(
                            GenomeInfoDb::seqnames(genome)[chrInds[i]]),
-                         sep = '')
+                         sep='')
             )),"N")
         chrMatchedCase <- IRanges::union(
           IRanges::ranges(Biostrings::matchPattern(Biostrings::DNAString(motif),
                                                    chrDNA,
-                                                   fixed = FALSE,
-                                                   max.mismatch = mismatchNumber
+                                                   fixed=FALSE,
+                                                   max.mismatch=mismatchNumber
           )
           ),
           IRanges::ranges(
             Biostrings::matchPattern(
               Biostrings::reverseComplement(Biostrings::DNAString(motif)),
               chrDNA,
-              fixed = FALSE,
-              max.mismatch =  mismatchNumber)
+              fixed=FALSE,
+              max.mismatch=mismatchNumber)
           )
         )
         if(length(chrMatchedCase)>0)
         {
           chrRegions <- GenomicRanges::GRanges(
             seqnames=GenomeInfoDb::seqnames(genome)[chrInds[i]],
-            ranges = IRanges::IRanges(BiocGenerics::start(chrMatchedCase),
+            ranges=IRanges::IRanges(BiocGenerics::start(chrMatchedCase),
                                       end=BiocGenerics::end(chrMatchedCase))
           )
           motifSites <- GenomicRanges::union(motifSites, chrRegions)
@@ -531,26 +531,26 @@ findMotifs  <-
         eval(parse(
           text=paste("genome$",
                      as.character(GenomeInfoDb::seqnames(genome)[chrInds[i]]),
-                     sep = '')
+                     sep='')
           )),"N")
     chrMatchedCase <-
       IRanges::union(
         IRanges::ranges(Biostrings::matchPattern(Biostrings::DNAString(motif),
                                                  chrDNA,
-                                                 fixed = FALSE,
-                                                 max.mismatch =  mismatchNumber)
+                                                 fixed=FALSE,
+                                                 max.mismatch=mismatchNumber)
                         ),
         IRanges::ranges(Biostrings::matchPattern(
           Biostrings::reverseComplement(Biostrings::DNAString(motif)),
           chrDNA,
-          fixed = FALSE,
-          max.mismatch =  mismatchNumber)
+          fixed=FALSE,
+          max.mismatch=mismatchNumber)
                         )
         )
     if(length(chrMatchedCase)>0){
       chrRegions <- GenomicRanges::GRanges(
         seqnames=GenomeInfoDb::seqnames(genome)[chrInds[i]],
-        ranges = IRanges::IRanges(BiocGenerics::start(chrMatchedCase),
+        ranges=IRanges::IRanges(BiocGenerics::start(chrMatchedCase),
                                   end=BiocGenerics::end(chrMatchedCase))
         )
       motifSites <- GenomicRanges::union(motifSites, chrRegions)
@@ -602,21 +602,21 @@ deriveHeuristicBindingDistribution <-
 
     if(!(file.exists(acceptedRegionsOutputFile)))
     {
-      stop( paste0(acceptedRegionsOutputFile," does not exist"))
+      stop(acceptedRegionsOutputFile," does not exist")
     }
 
     if(!(dir.exists(currentDir)))
     {
-      stop( paste0(currentDir," does not exist"))
+      stop(currentDir," does not exist")
     }
 
 
   acceptedRegionTable <- utils::read.table(acceptedRegionsOutputFile,
-                                           header = TRUE,
+                                           header=TRUE,
                                            stringsAsFactors=FALSE)
   acceptedRegion <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(acceptedRegionTable[,1]),
-    ranges = IRanges::IRanges(acceptedRegionTable[,2], acceptedRegionTable[,3])
+    ranges=IRanges::IRanges(acceptedRegionTable[,2], acceptedRegionTable[,3])
     )
   rm(acceptedRegionTable)
   regionNumber <- length(acceptedRegion)
@@ -624,26 +624,26 @@ deriveHeuristicBindingDistribution <-
   oneBindingSiteIndices <-
     which(((BiocGenerics::end(acceptedRegion) -
               BiocGenerics::start(acceptedRegion))==(2*windowSize))==TRUE)
-  multiBindingSiteIndices <- setdiff(c(1:regionNumber), oneBindingSiteIndices)
+  multiBindingSiteIndices <- setdiff(seq_len(regionNumber), oneBindingSiteIndices)
 
   replicateNumber <- length(chipSeq$IPfiles)
-  FRiPs <- c(1:replicateNumber)*0
+  FRiPs <- seq_len(replicateNumber)*0
 
-  for (i in c(1:replicateNumber))
+  for (i in seq_len(replicateNumber))
   {
     if(!(file.exists(as.character(chipSeq$IPfiles[i]))))
     {
-      stop( paste0(as.character(chipSeq$IPfiles[i])," does not exist"))
+      stop(as.character(chipSeq$IPfiles[i])," does not exist")
     }
 
     Table <- utils::read.table(
-      file = as.character(chipSeq$IPfiles[i]),
-      header = FALSE,
+      file=as.character(chipSeq$IPfiles[i]),
+      header=FALSE,
       stringsAsFactors=FALSE
       )
     chipReads <- GenomicRanges::GRanges(
       seqnames=S4Vectors::Rle(Table[,1]),
-      ranges = IRanges::IRanges(Table[,2], Table[,3])
+      ranges=IRanges::IRanges(Table[,2], Table[,3])
       )
     rm(Table)
     gc() # garbage collection
@@ -662,7 +662,7 @@ deriveHeuristicBindingDistribution <-
     tmpOverlaps <- GenomicRanges::findOverlaps(chipReads,nonDecomposingRegions)
     bindingDistribution <- as.data.frame(
       table(
-        c(c(1:(2*windowSize+1)),
+        c(seq_len(2*windowSize+1),
           (BiocGenerics::end(chipReads[S4Vectors::queryHits(tmpOverlaps)])-
              BiocGenerics::start(
                nonDecomposingRegions[S4Vectors::subjectHits(tmpOverlaps)])
@@ -675,7 +675,7 @@ deriveHeuristicBindingDistribution <-
     bckgrShortReads <- averageBindings[i]*length(oneBindingSiteIndices)
     freq <- bindingDistribution$Freq/sum(bindingDistribution$Freq)
     kernelDistribution <- fitKernelDensity(
-      freq[1:(2*windowSize+1)], totalShortReads, windowSize)
+      freq[seq_len(2*windowSize+1)], totalShortReads, windowSize)
     kernelDistribution$Freq <-
       kernelDistribution$Freq - (bckgrShortReads/(2*windowSize+1))
     kernelDistribution$Freq <-
@@ -684,14 +684,14 @@ deriveHeuristicBindingDistribution <-
     KFnumber <- length(kernelDistribution$Freq)
     if(KFnumber>0)
     {
-      grDevices::png(filename =  file.path(currentDir ,
+      grDevices::png(filename=file.path(currentDir,
                        paste0("Heuristic binding distribute_",i)))
       graphics::plot(y=kernelDistribution$Freq,
-                     x= c(1: KFnumber),
+                     x=seq_len(KFnumber),
                      xlab="nucleotide",
-                     ylab = "Frequency",
+                     ylab="Frequency",
                      ylim=c(0,max(kernelDistribution$Freq)+0.001),
-                     main = "commulative distirubtion"
+                     main="commulative distirubtion"
       )
       grDevices::dev.off()
     }
@@ -710,7 +710,7 @@ deriveHeuristicBindingDistribution <-
     multiBindingSiteIndiceNumber <- length(multiBindingSiteIndices)
     if(multiBindingSiteIndiceNumber>0)
     {
-      for(j in c(1:multiBindingSiteIndiceNumber))
+      for(j in seq_len(multiBindingSiteIndiceNumber))
       {
         # Get short reads of ith IP experiment for jth binding region
         overlappingReads <-
@@ -777,9 +777,9 @@ fitKernelDensity <- function(heuristicDistribution, totalShortReads, windowSize)
                          rep(i,round(totalNumber*heuristicDistribution[i])))
   }
   kernelDistribution <- stats::density(heuristicVector,
-                                       from = 1,
-                                       to = (2*windowSize+1),
-                                       n = (2*windowSize+1)
+                                       from=1,
+                                       to=(2*windowSize+1),
+                                       n=(2*windowSize+1)
                                        )
   kernelVector <- rep(1,round(totalNumber*kernelDistribution$y[1]))
   for (i in c(2:((2*windowSize)+1)))
@@ -831,32 +831,32 @@ decomposeBindingSignal <-
 
     if(!(file.exists(acceptedRegionsOutputFile)))
     {
-      stop( paste0(acceptedRegionsOutputFile," does not exist"))
+      stop(acceptedRegionsOutputFile," does not exist")
     }
 
     if(!(file.exists(acceptedMotifsOutputFile)))
     {
-      stop( paste0(acceptedMotifsOutputFile," does not exist"))
+      stop(acceptedMotifsOutputFile," does not exist")
     }
 
     if(!(dir.exists(currentDir)))
     {
-      stop( paste0(currentDir," does not exist"))
+      stop(currentDir," does not exist")
     }
 
   acceptedRegionTable <- utils::read.table(acceptedRegionsOutputFile,
-                                           header = TRUE,
+                                           header=TRUE,
                                            stringsAsFactors=FALSE)
   acceptedRegion <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(acceptedRegionTable[,1]),
-    ranges = IRanges::IRanges(acceptedRegionTable[,2], acceptedRegionTable[,3])
+    ranges=IRanges::IRanges(acceptedRegionTable[,2], acceptedRegionTable[,3])
     )
   acceptedMotifTable <- utils::read.table(acceptedMotifsOutputFile,
-                                          header = TRUE,
+                                          header=TRUE,
                                           stringsAsFactors=FALSE)
   acceptedMotif <-
     GenomicRanges::GRanges(seqnames=S4Vectors::Rle(acceptedMotifTable[,1]),
-                           ranges = IRanges::IRanges(acceptedMotifTable[,2],
+                           ranges=IRanges::IRanges(acceptedMotifTable[,2],
                                                      acceptedMotifTable[,3])
                            )
   if(replicateNumber>1)
@@ -872,7 +872,7 @@ decomposeBindingSignal <-
   RejectedMotifs <- c()
   RemainedMotifs <- c()
 
-  for (i in c(1:regionNumber))
+  for (i in seq_len(regionNumber))
   {
     currentRegionLength <-
       acceptedRegionTable$end[i]-acceptedRegionTable$start[i]
@@ -885,25 +885,22 @@ decomposeBindingSignal <-
       motifTableIndices <- S4Vectors::queryHits(
         GenomicRanges::findOverlaps(acceptedMotif,acceptedRegion[i]))
       readLocations <- c()
-      for (j in c(1:replicateNumber))
+      for (j in seq_len(replicateNumber))
       {
+        currentFile <- paste0("bindingVector_", j, "_", i)
         if(!(file.exists(
-          file.path(currentDir, paste0("bindingVector_", j, "_", i)))))
+          file.path(currentDir, currentFile))))
         {
-          stop(
-            paste0(file.path(currentDir, paste0("bindingVector_", j, "_", i)),
-                   " does not exist")
-            )
+          stop(file.path(currentDir, currentFile), " does not exist")
         }
 
         tab<- utils::read.table(
-          file=file.path(currentDir, paste0("bindingVector_", j, "_", i)),
+          file=file.path(currentDir, currentFile),
           header=TRUE,
           stringsAsFactors=FALSE
           )
 
-        DeleteMultipleFiles(file.path(currentDir,
-                                      paste0("bindingVector_", j, "_", i)))
+        DeleteMultipleFiles(file.path(currentDir, currentFile))
         vec <- rep(tab$Var1, tab$Freq)
         readLocations <- c(readLocations,vec)
       }
@@ -947,9 +944,9 @@ decomposeBindingSignal <-
         {
           try({
             mixture <- quiet(mixtools::normalmixEM(readLocations,
-                                                   mu = motifLocations,
-                                                   mean.constr = motifLocations,
-                                                   maxit = 10))
+                                                   mu=motifLocations,
+                                                   mean.constr=motifLocations,
+                                                   maxit=10))
             flag <- FALSE
           })
         }
@@ -1017,7 +1014,7 @@ decomposeBindingSignal <-
 
   acceptedRegion <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(acceptedMotifTable[,1]),
-    ranges = IRanges::IRanges(
+    ranges=IRanges::IRanges(
       (acceptedMotifTable[,2]+acceptedMotifTable[,3])/2,
       (acceptedMotifTable[,2]+acceptedMotifTable[,3])/2
       )+windowSize
@@ -1028,10 +1025,10 @@ decomposeBindingSignal <-
     GenomicRanges::findOverlaps(acceptedRegion,  acceptedMotif)
 
   acceptedRegionNumber <-  length(acceptedRegion)
-  sitesVector <- vector(mode = "character", length = acceptedRegionNumber)
+  sitesVector <- vector(mode="character", length=acceptedRegionNumber)
   if(acceptedRegionNumber>0)
   {
-    for(i in c(1:acceptedRegionNumber))
+    for(i in seq_len(acceptedRegionNumber))
     {
       tmpBindingIndices <- S4Vectors::subjectHits(bindingRegionSitesIndices)[
         which((S4Vectors::queryHits(bindingRegionSitesIndices)==i)==TRUE)]
@@ -1040,7 +1037,7 @@ decomposeBindingSignal <-
           round((BiocGenerics::start(acceptedMotif[tmpBindingIndices])+
                    BiocGenerics::end(acceptedMotif[tmpBindingIndices]))/2
           ),
-          collapse = ","
+          collapse=","
         )
     }
   }
@@ -1051,18 +1048,18 @@ decomposeBindingSignal <-
                    bindinSites=sitesVector
                    )
   utils::write.table(df,
-                     file = acceptedRegionsOutputFile,
-                     row.names = FALSE,
-                     col.names = TRUE,
-                     quote = FALSE,
+                     file=acceptedRegionsOutputFile,
+                     row.names=FALSE,
+                     col.names=TRUE,
+                     quote=FALSE,
                      sep="\t"
                      )
 
   utils::write.table(acceptedMotifTable,
-                     file = acceptedMotifsOutputFile,
-                     row.names = FALSE,
-                     col.names = TRUE,
-                     quote = FALSE,
+                     file=acceptedMotifsOutputFile,
+                     row.names=FALSE,
+                     col.names=TRUE,
+                     quote=FALSE,
                      sep="\t"
                      )
 
@@ -1105,7 +1102,7 @@ removeNonBellShapedMotifs <-
   bellShaped <- rep(TRUE, motifNumber)
   skewnessVec <- rep(0,length(motifLocations))
 
-  for (i in c(1:motifNumber))
+  for (i in seq_len(motifNumber))
   {
 
     motifDist <-
@@ -1131,7 +1128,7 @@ removeNonBellShapedMotifs <-
   }
 
   # Check more sites are in the windows/2 intervals around motifs
-  for (i in c(1:motifNumber)){
+  for (i in seq_len(motifNumber)){
     largeInterval <- c(motifLocations[i]-windowSize,
                        motifLocations[i]+windowSize
                        )
@@ -1156,13 +1153,13 @@ removeNonBellShapedMotifs <-
 
   if(length(motifLocations)>maximumMotifReturn)
   {
-    motifLocations <-  motifLocations[order(skewnessVec)[1:maximumMotifReturn]]
+    motifLocations <-
+      motifLocations[order(skewnessVec)[seq_len(maximumMotifReturn)]]
   }
 
   return(motifLocations)
 
 }
-
 
 
 #' @title Returns the motif with the highest count
@@ -1180,7 +1177,7 @@ strongestMotif <- function (motifLocations, readLocations, windowSize){
   if(motifLocationNumber>0)
   {
     tmpCount <- rep(0, motifLocationNumber)
-    for (i in c(1:motifLocationNumber)){
+    for (i in seq_len(motifLocationNumber)){
       largeInterval <-
         c(motifLocations[i]-windowSize, motifLocations[i]+windowSize)
       tmpCount[i] <-
@@ -1218,23 +1215,24 @@ motifBindingNegativeBinomialCount <-
 
     if(!(file.exists(countTableFile)))
     {
-      stop( paste0(countTableFile," does not exist"))
+      stop(countTableFile," does not exist")
     }
 
     if(!(dir.exists(currentDir)))
     {
-      stop(paste0(currentDir), " does not exist")
+      stop(currentDir, " does not exist")
     }
 
   countTable <- utils::read.table(countTableFile,
-                                  header = FALSE,
+                                  header=FALSE,
                                   stringsAsFactors=FALSE
                                   )
   totalMotifNumber <- nrow(countTable)
   breakSize <- round(480000/replicateNumber)
   if(breakSize<totalMotifNumber)
   {
-    iterationPoints <- c(0,c(1:(round(totalMotifNumber/breakSize)-1))*breakSize)
+    iterationPoints <- 
+      c(0,seq_len((round(totalMotifNumber/breakSize)-1))*breakSize)
     iterationNumber <- length(iterationPoints)-1
     iterationPoints[iterationNumber+ 1] <- totalMotifNumber
 
@@ -1243,31 +1241,31 @@ motifBindingNegativeBinomialCount <-
     iterationNumber <- 1
   }
 
-  outputDF <- data.frame(logFE=c(1:totalMotifNumber)*0,
-                         PValue=c(1:totalMotifNumber)*0,
-                         normalizedCountIP=c(1:totalMotifNumber)*0,
-                         normalizedCountInput=c(1:totalMotifNumber)*0
+  outputDF <- data.frame(logFE=seq_len(totalMotifNumber)*0,
+                         PValue=seq_len(totalMotifNumber)*0,
+                         normalizedCountIP=seq_len(totalMotifNumber)*0,
+                         normalizedCountInput=seq_len(totalMotifNumber)*0
                          )
 
-  for(i in c(1:iterationNumber))
+  for(i in seq_len(iterationNumber))
   {
     # make DGE list table of edgeR
     tableOfCounts <- edgeR::DGEList(
-      counts =
+      counts=
         countTable[(iterationPoints[i]+1):iterationPoints[i+1],
-                   c(1:(2*replicateNumber))],
-      group =  c(rep("IP",replicateNumber),rep("Input",replicateNumber)),
-      remove.zeros = FALSE
+                   seq_len((2*replicateNumber))],
+      group=c(rep("IP",replicateNumber),rep("Input",replicateNumber)),
+      remove.zeros=FALSE
       )
     gc()
 
     TotalCountsTable <- utils::read.table(
       file.path(currentDir, "TotalCounts"),
-      header = TRUE,
+      header=TRUE,
       stringsAsFactors=FALSE
       )
 
-    tableOfCounts$samples$lib.size[1:replicateNumber] <-
+    tableOfCounts$samples$lib.size[seq_len(replicateNumber)] <-
       TotalCountsTable$ipTotalCount
 
     tableOfCounts$samples$lib.size[(replicateNumber+1):(2*replicateNumber)] <-
@@ -1293,19 +1291,18 @@ motifBindingNegativeBinomialCount <-
   gc()
 
   utils::write.table(outputDF,
-                     file = outputFile,
-                     col.names = TRUE,
-                     row.names = FALSE,
-                     quote = FALSE
+                     file=outputFile,
+                     col.names=TRUE,
+                     row.names=FALSE,
+                     quote=FALSE
                      )
-  df <- data.frame(commonDispersion = tableOfCounts$common.dispersion,
-                   pseudoLibSize= tableOfCounts$pseudo.lib.size
+  df <- data.frame(commonDispersion=tableOfCounts$common.dispersion,
+                   pseudoLibSize=tableOfCounts$pseudo.lib.size
                    )
   rm(testWithReplicate,tableOfCounts)
   gc()
   return(df)
 }
-
 
 
 #' @title Negative binomial test of binding using all replicates
@@ -1346,7 +1343,7 @@ NegativeBinomialTestWithReplicate <- function(object, prior.count=0.125)
   lib.size <- object$samples$lib.size[j]
   norm.factors <- object$samples$norm.factors[j]
   group <- group[j]
-  if(is.null(rownames(y))) rownames(y) <- paste("tag",1:ntags,sep=".")
+  if(is.null(rownames(y))) rownames(y) <- paste("tag", seq_len(ntags), sep=".")
 
   # Normalized library sizes
   lib.size <- lib.size * norm.factors
@@ -1388,18 +1385,18 @@ NegativeBinomialTestWithReplicate <- function(object, prior.count=0.125)
   eps <- 0.001
   log2normalizedCountIP <- log2(normalizedCountIP + eps)
   upperbound <-
-    ceiling(2^(stats::quantile(log2normalizedCountIP ,0.75)+
+    ceiling(2^(stats::quantile(log2normalizedCountIP, 0.75)+
                  1.5*stats::IQR(log2normalizedCountIP))
             )
 
   gc()
 
-  normalizedCountIPNumber <-length(normalizedCountIP)
+  normalizedCountIPNumber <- length(normalizedCountIP)
   if(normalizedCountIPNumber<1)
-    stop("Error no data to fit by negative binomial")
+    stop("no data to fit by negative binomial")
 
   tmpDist <- normalizedCountIP[
-    setdiff(c(1:normalizedCountIPNumber),
+    setdiff(seq_len(normalizedCountIPNumber),
             which((normalizedCountIP>upperbound)==TRUE))
     ]
   meanTmpDist <- mean(tmpDist)
@@ -1409,17 +1406,23 @@ NegativeBinomialTestWithReplicate <- function(object, prior.count=0.125)
     else  meanTmpDist*2
   flag <- TRUE
   try({
-    distNB <- quiet(suppressWarnings(MASS::fitdistr(tmpDist,
-                             densfun = "negative binomial",
-                             start=list(size = size, mu = meanTmpDist)
-                             )))
+#    distNB <- quiet(suppressWarnings(MASS::fitdistr(tmpDist,
+#                             densfun="negative binomial",
+#                             start=list(size=size, mu=meanTmpDist)
+#                             )))
+    distNB <- quiet(MASS::fitdistr(tmpDist,
+                                   densfun="negative binomial",
+                                   start=list(size=size, mu=meanTmpDist)
+                                   )
+                    )
     flag <- FALSE
   })
 
   if(flag)
   {
-    distNB <- quiet(suppressWarnings(
-      MASS::fitdistr(tmpDist, densfun = "negative binomial")))
+ #   distNB <- quiet(suppressWarnings(
+#      MASS::fitdistr(tmpDist, densfun="negative binomial")))
+    distNB <- quiet(MASS::fitdistr(tmpDist, densfun="negative binomial"))
   }
 
   rm(tmpDist,meanTmpDist)
@@ -1427,7 +1430,7 @@ NegativeBinomialTestWithReplicate <- function(object, prior.count=0.125)
   pvals <- stats::pnbinom(normalizedCountIP,
                           size=(distNB$estimate)[1],
                           mu=(distNB$estimate)[2],
-                          lower.tail = FALSE
+                          lower.tail=FALSE
                           )
   normalizedCountIP <- normalizedCountIP/100
 
@@ -1460,23 +1463,23 @@ DetectFdrCutoffBH  <- function(TestTableFile="TestResults", fdrValue=0.05) {
 
   if(!(file.exists(TestTableFile)))
   {
-    stop(paste0(TestTableFile), " does not exist")
+    stop(TestTableFile, " does not exist")
   }
 
   TestTable <-
-    utils::read.table(TestTableFile, header = TRUE, stringsAsFactors=FALSE)
+    utils::read.table(TestTableFile, header=TRUE, stringsAsFactors=FALSE)
   # Remove NA lines
   pvals <- TestTable$Pvalue[which(!is.na(TestTable$Pvalue)==TRUE)]
   rm(TestTable)
   gc()
 
-  pvalsAdjusted <- stats::p.adjust(pvals, method = "BH")
+  pvalsAdjusted <- stats::p.adjust(pvals, method="BH")
   accepted <- which((pvalsAdjusted<fdrValue)==TRUE)
   if(length(accepted)==0)
   {
     stop("No motif has been accepted. Use higher fdrValue")
   }
-  return(max(pvals[accepted], na.rm = NA))
+  return(max(pvals[accepted], na.rm=NA))
 
 }
 
@@ -1499,38 +1502,38 @@ motifCount  <- function(motifFile, chipSeq, windowSize, outputName, currentDir)
 
   if(!(file.exists(motifFile)))
   {
-    stop(paste0(motifFile), " does not exist")
+    stop(motifFile, " does not exist")
   }
 
   if(!(dir.exists(currentDir)))
   {
-    stop(paste0(currentDir), " does not exist")
+    stop(currentDir, " does not exist")
   }
 
   if(!(file.exists(as.character(chipSeq$IPfiles[1]))))
   {
-    stop( "error in motif count: IP file does not exist")
+    stop("IP file does not exist")
   }
 
 
   if(!(file.exists(as.character(chipSeq$BackgroundFiles[1]))))
   {
-    stop( "error in motif count: background file does not exist")
+    stop("background file does not exist")
   }
 
 
   # short reads count for motifs - each IP and Input
   replicateNumber <- length(chipSeq$IPfiles)
-  ipTotalCount <- c(1:replicateNumber)*0
-  inputTotalCount <- c(1:replicateNumber)*0
-  for (i in c(1:replicateNumber))
+  ipTotalCount <- seq_len(replicateNumber)*0
+  inputTotalCount <- seq_len(replicateNumber)*0
+  for (i in seq_len(replicateNumber))
   {
 
     ipTotalCount[i] <- motifChipCount(
       motifFile=motifFile,
       chipFile=as.character(chipSeq$IPfiles[i]),
       windowSize=windowSize,
-      outputName=file.path(currentDir ,  paste0("count_IP", i))
+      outputName=file.path(currentDir,  paste0("count_IP", i))
       )
 
     inputTotalCount[i] <-
@@ -1538,16 +1541,16 @@ motifCount  <- function(motifFile, chipSeq, windowSize, outputName, currentDir)
         motifFile=motifFile,
         chipFile=as.character(chipSeq$BackgroundFiles[i]),
         windowSize=windowSize,
-        outputName=file.path(currentDir ,  paste0("count_Input", i))
+        outputName=file.path(currentDir,  paste0("count_Input", i))
         )
 
     computeFoldEnrichment(
-      ipCountFile=file.path(currentDir ,  paste0("count_IP", i)),
+      ipCountFile=file.path(currentDir,  paste0("count_IP", i)),
       inputCountFile=
-        file.path(currentDir , paste0("count_Input", i)),
+        file.path(currentDir, paste0("count_Input", i)),
       ipTotalCount=ipTotalCount[i],
       inputTotalCount=inputTotalCount[i],
-      outputName=file.path(currentDir , paste0("FE",i))
+      outputName=file.path(currentDir, paste0("FE",i))
       )
 
   }
@@ -1560,7 +1563,7 @@ motifCount  <- function(motifFile, chipSeq, windowSize, outputName, currentDir)
 
   utils::write.table(
     df,
-    file=file.path(currentDir , "TotalCounts"),
+    file=file.path(currentDir, "TotalCounts"),
     quote=FALSE,
     sep="\t",
     row.names=FALSE,
@@ -1588,20 +1591,20 @@ motifChipCount  <- function(motifFile, chipFile, windowSize, outputName)
 
   if(!(file.exists(motifFile)))
   {
-    stop(paste0(motifFile), " does not exist")
+    stop(motifFile, " does not exist")
   }
 
   if(!(file.exists(chipFile)))
   {
-    stop(paste0(chipFile), " does not exist")
+    stop(chipFile, " does not exist")
   }
 
   # 1nt alignmetn bed to granges
   Table <-
-    utils::read.table(file = chipFile, header = FALSE, stringsAsFactors=FALSE)
+    utils::read.table(file=chipFile, header=FALSE, stringsAsFactors=FALSE)
   chipReads <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(Table[,1]),
-    ranges = IRanges::IRanges(Table[,2], Table[,3]))
+    ranges=IRanges::IRanges(Table[,2], Table[,3]))
   # Remove Table data
   rm(Table)
   gc() # garbage collection
@@ -1618,11 +1621,11 @@ motifChipCount  <- function(motifFile, chipFile, windowSize, outputName)
   rm(Table)
   gc() # garbage collection
   motifCounts <- GenomicRanges::countOverlaps(motifWindow, chipReads)
-  df <- data.frame(motifCounts = motifCounts)
+  df <- data.frame(motifCounts=motifCounts)
   utils::write.table(df,
-                     file = outputName,
-                     col.names = FALSE,
-                     row.names = FALSE,
+                     file=outputName,
+                     col.names=FALSE,
+                     row.names=FALSE,
                      quote=FALSE
                      )
   rm(motifWindow, chipReads,  motifCounts)
@@ -1651,32 +1654,33 @@ computeFoldEnrichment  <-
 
     if(!(file.exists(ipCountFile)))
     {
-      stop(paste0(ipCountFile), " does not exist")
+      stop(ipCountFile, " does not exist")
     }
 
     if(!(file.exists(inputCountFile)))
     {
-      stop(paste0(inputCountFile), " does not exist")
+      stop(inputCountFile, " does not exist")
     }
 
   ipCounts <- (utils::read.table(file=ipCountFile,
-                                 header = FALSE,
+                                 header=FALSE,
                                  stringsAsFactors=FALSE)
                )[,1]
   inputCounts <- (utils::read.table(file=inputCountFile,
-                                    header = FALSE,
+                                    header=FALSE,
                                     stringsAsFactors=FALSE)
                   )[,1]
   eps <- 0.00001 # to avoid division by zero
   FEs <- ((ipCounts+eps)/ipTotalCount)/((inputCounts+eps)/inputTotalCount)
-  df <- data.frame(FEs = FEs)
+  df <- data.frame(FEs=FEs)
   utils::write.table(df,
-                     file = outputName,
-                     col.names = FALSE,
-                     row.names = FALSE,
+                     file=outputName,
+                     col.names=FALSE,
+                     row.names=FALSE,
                      quote=FALSE
                      )
 }
+
 
 
 
@@ -1693,80 +1697,82 @@ combine2Table  <- function(outputName,replicateNumber,currentDir)
 
   if(!(dir.exists(currentDir)))
   {
-    stop(paste0(currentDir), " does not exist")
+    stop(currentDir, " does not exist")
   }
 
   if(!(file.exists( file.path(currentDir, paste0("count_IP", 1)))))
   {
-    stop( "error in combine2Table count_IP1 does not exist")
+    stop("combine2Table count_IP1 does not exist")
   }
 
   ipCounts <-
     matrix(0,
-           nrow = length((utils::read.table(
-             file = file.path(currentDir, paste0("count_IP", 1)),
-             header = FALSE,
+           nrow=length((utils::read.table(
+             file=file.path(currentDir, paste0("count_IP", 1)),
+             header=FALSE,
              stringsAsFactors=FALSE))[,1]),
-           ncol = replicateNumber
+           ncol=replicateNumber
            )
   inputCount <- ipCounts
   FE <- ipCounts
-  colnames(ipCounts)<- paste0(rep("IP",replicateNumber),c(1:replicateNumber))
+  colnames(ipCounts) <- 
+    paste0(rep("IP",replicateNumber), seq_len(replicateNumber))
   colnames(inputCount)<-
-    paste0(rep("Input",replicateNumber),c(1:replicateNumber))
-  colnames(FE)<- paste0(rep("FE",replicateNumber),c(1:replicateNumber))
-  for (i in c(1:replicateNumber))
+    paste0(rep("Input",replicateNumber), seq_len(replicateNumber))
+  colnames(FE)<- paste0(rep("FE",replicateNumber), seq_len(replicateNumber))
+  for (i in seq_len(replicateNumber))
   {
 
     if(!(file.exists( file.path(currentDir, paste0("count_IP", i)))))
     {
-      stop(paste0("error in combine2Table count_IP", i, "does not exist"))
+      stop("combine2Table count_IP", i, "does not exist")
     }
     ipCounts[,i] <- (utils::read.table(
-      file = file.path(currentDir , paste0("count_IP", i)),
-      header = FALSE,
+      file=file.path(currentDir, paste0("count_IP", i)),
+      header=FALSE,
       stringsAsFactors=FALSE)
       )[,1]
 
     if(!(file.exists( file.path(currentDir, paste0("count_Input", i)))))
     {
-      stop(paste0("error in combine2Table count_Input", i, "does not exist"))
+      stop("combine2Table count_Input", i, "does not exist")
     }
     inputCount[,i] <- (utils::read.table(
-      file = file.path(currentDir , paste0("count_Input", i)),
-      header = FALSE,
+      file=file.path(currentDir, paste0("count_Input", i)),
+      header=FALSE,
       stringsAsFactors=FALSE)
       )[,1]
 
 
     if(!(file.exists( file.path(currentDir, paste0("FE", i)))))
     {
-      stop(paste0("error in combine2Table FE", i, "does not exist"))
+      stop("combine2Table FE", i, "does not exist")
     }
     FE[,i] <- (utils::read.table(
-      file.path(currentDir , paste0("FE",i)),
-      header = FALSE,
-      stringsAsFactors = FALSE)
+      file.path(currentDir, paste0("FE",i)),
+      header=FALSE,
+      stringsAsFactors=FALSE)
       )[,1]
     DeleteMultipleFiles(
-      c(file.path(currentDir , paste0("count_IP", i)),
-        file.path(currentDir , paste0("count_Input", i)),
-        file.path(currentDir , paste0("FE",i)))
+      c(file.path(currentDir, paste0("count_IP", i)),
+        file.path(currentDir, paste0("count_Input", i)),
+        file.path(currentDir, paste0("FE",i)))
       )
   }
 
-  combinedMatrix <- c(data.frame(ipCounts), data.frame(inputCount),
-                      data.frame(FE))
+  combinedMatrix <- c(data.frame(ipCounts),
+                      data.frame(inputCount),
+                      data.frame(FE)
+                      )
 
   utils::write.table(combinedMatrix,
-                     file = outputName,
-                     col.names = TRUE,
-                     row.names = FALSE,
-                     quote = FALSE
+                     file=outputName,
+                     col.names=TRUE,
+                     row.names=FALSE,
+                     quote=FALSE
                      )
 
 }
-
 
 
 #' @title Process count data and perform negative binomial test
@@ -1785,44 +1791,44 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
 
   if(!(dir.exists(currentDir)))
   {
-    stop(paste0(currentDir), " does not exist")
+    stop(currentDir, " does not exist")
   }
 
   if(!(file.exists(countTableFile)))
   {
-    stop( paste0(countTableFile," does not exist"))
+    stop(countTableFile," does not exist")
   }
 
   outVectorName <- file.path(currentDir, "motifBindingTestVector")
   outTableName <- file.path(currentDir, "reducedTableMotifs")
   countTable <-
-    utils::read.table(countTableFile, header = TRUE, stringsAsFactors = FALSE)
+    utils::read.table(countTableFile, header=TRUE, stringsAsFactors=FALSE)
   replicateNumber <- ncol(countTable)/3
   motifNumber <- nrow(countTable)
 
 
   ## Mark regions with no short reads mapped as nonseqeunced
   nonSequencedRegions <- which((countTable[,1]==0)==TRUE)
-  for (i in c(2:(2*replicateNumber)))
+  for (i in seq(from=2, to=(2*replicateNumber)))
   {
     nonSequencedRegions <-
       intersect(nonSequencedRegions, which((countTable[,i]==0)==TRUE))
   }
-  acceptableIndices <- setdiff(c(1:motifNumber),nonSequencedRegions)
+  acceptableIndices <- setdiff(seq_len(motifNumber), nonSequencedRegions)
 
 
   ## Compute low and high binding threshold with quantiles in log2 scale
-  upperbound <- c(1:(2*replicateNumber))*0
-  lowerbound <- c(1:(2*replicateNumber))*0
-  extremeUpperbound <- c(1:(2*replicateNumber))*0
-  extremeLowerbound <- c(1:(2*replicateNumber))*0
+  upperbound <- seq_len(2*replicateNumber)*0
+  lowerbound <- seq_len(2*replicateNumber)*0
+  extremeUpperbound <- seq_len(2*replicateNumber)*0
+  extremeLowerbound <- seq_len(2*replicateNumber)*0
   eps <- 1
   log2countTable <-
-    log2(countTable[acceptableIndices,1:(2*replicateNumber)]+eps)
-  for (i in c(1:(2*replicateNumber)))
+    log2(countTable[acceptableIndices, seq_len(2*replicateNumber)]+eps)
+  for (i in seq_len(2*replicateNumber))
   {
     upperbound[i] <-
-      stats::quantile(log2countTable[,i] ,0.75)+
+      stats::quantile(log2countTable[,i], 0.75)+
       1.5*stats::IQR(log2countTable[,i])
   }
 
@@ -1830,8 +1836,9 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
   ## Remove high Input in any replicate
   upBindingInds <-
     which(
-      (countTable[,replicateNumber+1]>(2^upperbound[replicateNumber+1]))
-      ==TRUE)
+      (countTable[,replicateNumber+1]>(2^upperbound[replicateNumber+1])
+       )==TRUE
+      )
   for (i in c((replicateNumber+1):(2*replicateNumber)))
   {
     upBindingInds <-
@@ -1842,37 +1849,39 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
 
   ## Remove extreme low in IP ChIP-seqs
   combineRowSum <-
-    log2(rowSums(countTable[acceptableIndices,1:(2*replicateNumber)]))
+    log2(rowSums(countTable[acceptableIndices, seq_len(2*replicateNumber)]))
   lowerbound <-
-    stats::quantile( combineRowSum ,0.25)-1.5*stats::IQR(combineRowSum)
+    stats::quantile(combineRowSum, 0.25)-1.5*stats::IQR(combineRowSum)
   lowBindingInds <-
-    which((rowSums(countTable[,1:(2*replicateNumber)])<(2^lowerbound))==TRUE)
+    which(
+      (rowSums(countTable[,seq_len(2*replicateNumber)])<(2^lowerbound))==TRUE
+      )
   acceptableIndices <- setdiff(acceptableIndices, lowBindingInds)
 
   lowBindingInds <- setdiff(lowBindingInds, nonSequencedRegions)
 
-  testVector <- vector(mode = "character", length = motifNumber)
-  testVector[1:motifNumber] <- "Tested"
+  testVector <- vector(mode="character", length=motifNumber)
+  testVector[seq_len(motifNumber)] <- "Tested"
   testVector[lowBindingInds] <- "UnderBound"
   testVector[upBindingInds] <- "OverBound"
   testVector[nonSequencedRegions] <- "NonSequenced"
 
-  df <- data.frame(testVector = testVector)
+  df <- data.frame(testVector=testVector)
   utils::write.table(df,
-                     file = outVectorName,
-                     col.names = FALSE,
-                     row.names = FALSE,
-                     quote = FALSE
+                     file=outVectorName,
+                     col.names=FALSE,
+                     row.names=FALSE,
+                     quote=FALSE
                      )
   rm(testVector, df, log2countTable,combineRowSum)
   gc()
   utils::write.table(
-    data.frame(countTable[acceptableIndices,c(1:(2*replicateNumber))]),
+    data.frame(countTable[acceptableIndices, seq_len(2*replicateNumber)]),
     file=outTableName,
-    quote = FALSE,
+    quote=FALSE,
     sep="\t",
-    row.names = FALSE,
-    col.names = FALSE
+    row.names=FALSE,
+    col.names=FALSE
     )
   rm(countTable, acceptableIndices)
   gc()
@@ -1884,7 +1893,7 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
     )
   rm(upBindingInds, lowBindingInds, nonSequencedRegions)
   gc()
-  outputFile <- file.path(currentDir ,"BinomialCount")
+  outputFile <- file.path(currentDir, "BinomialCount")
 
   if(replicateNumber>1)
   {
@@ -1895,22 +1904,22 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
                                                 currentDir=currentDir
                                                 )
 
-    testVector <- (utils::read.table(outVectorName,header = FALSE,
-                                     stringsAsFactors = FALSE))[,1]
+    testVector <- (utils::read.table(outVectorName,header=FALSE,
+                                     stringsAsFactors=FALSE))[,1]
     pvalNumber <- length(testVector)
-    pvals <- vector(mode = "numeric", length = pvalNumber)
+    pvals <- vector(mode="numeric", length=pvalNumber)
 
     if(pvalNumber>0)
     {
-      pvals[1:pvalNumber] <- NA
+      pvals[seq_len(pvalNumber)] <- NA
     }
 
     FEs <- pvals
     normalizedCountIP <- pvals
     normalizedCountInput <- pvals
     acceptableIndices <- which((testVector=="Tested")==TRUE)
-    testResults <- utils::read.table(outputFile,header = TRUE,
-                                     stringsAsFactors = FALSE)
+    testResults <- utils::read.table(outputFile,header=TRUE,
+                                     stringsAsFactors=FALSE)
     FEs[acceptableIndices] <- 2^testResults$logFE
     pvals[acceptableIndices] <- testResults$PValue
     normalizedCountIP[acceptableIndices] <- testResults$normalizedCountIP
@@ -1918,11 +1927,11 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
     df <- data.frame(Test=testVector,
                      FoldEnrichment=FEs,
                      Pvalue=pvals,
-                     NormalizedCountIP= normalizedCountIP,
+                     NormalizedCountIP=normalizedCountIP,
                      NormalizedCountInput=normalizedCountInput
                      )
-    utils::write.table(df, file = outFile, col.names = TRUE,
-                       row.names = FALSE, quote=FALSE)
+    utils::write.table(df, file=outFile, col.names=TRUE,
+                       row.names=FALSE, quote=FALSE)
     rm(df, FEs, pvals, testVector, acceptableIndices,
        normalizedCountInput, normalizedCountIP)
     gc()
@@ -1934,49 +1943,57 @@ motifTablePreProcess <- function(countTableFile,  outFile, currentDir)
       )
   } else {
     countTable <- utils::read.table(
-      file.path(currentDir ,"reducedTableMotifs"),
-      header = FALSE,
+      file.path(currentDir, "reducedTableMotifs"),
+      header=FALSE,
       stringsAsFactors=FALSE
       )
 
     eps <- 1
     log2normalizedCountIP <- log2(countTable[,1] + eps)
-    upperbound <- 2^(stats::quantile(log2normalizedCountIP ,0.75)
+    upperbound <- 2^(stats::quantile(log2normalizedCountIP, 0.75)
                      +1.5*stats::IQR(log2normalizedCountIP))
 
     dataPointNumber <-length(countTable[,1])
-    if(dataPointNumber <2)
-      stop("Error enough motifs does not exist to fit negative binomial curve")
+    if(dataPointNumber<2)
+      stop("enough motifs does not exist to fit negative binomial curve")
 
-    distNB <- quiet(suppressWarnings(MASS::fitdistr(
-      countTable[setdiff(c(1:dataPointNumber),
+#    distNB <- quiet(suppressWarnings(MASS::fitdistr(
+#      countTable[setdiff(seq_len(dataPointNumber),
+#                         which((countTable[,1]>upperbound)==TRUE)),1],
+#      densfun="negative binomial"
+#      )))
+    
+    
+    distNB <- quiet(MASS::fitdistr(
+      countTable[setdiff(seq_len(dataPointNumber),
                          which((countTable[,1]>upperbound)==TRUE)),1],
-      densfun = "negative binomial"
-      )))
+      densfun="negative binomial"
+    ))
+    
     testedPvals <- stats::pnbinom(
       countTable[,1],
       size=(distNB$estimate)[1],
       mu=(distNB$estimate)[2],
-      lower.tail = FALSE
+      lower.tail=FALSE
       )
     rm(countTable, distNB, log2normalizedCountIP)
     gc()
 
     testVector <- (utils::read.table(
-      outVectorName,header = FALSE, stringsAsFactors=FALSE))[,1]
+      outVectorName,header=FALSE, stringsAsFactors=FALSE))[,1]
 
     pvalNumber <- length(testVector)
-    pvals <- vector(mode = "numeric", length = pvalNumber)
+    pvals <- vector(mode="numeric", length=pvalNumber)
     if(pvalNumber>0)
     {
-      pvals[1:pvalNumber] <- NA
+      pvals[seq_len(pvalNumber)] <- NA
     }
 
     acceptableIndices <- which((testVector=="Tested")==TRUE)
     pvals[acceptableIndices] <- testedPvals
     df <- data.frame(Test=testVector, Pvalue=pvals)
     utils::write.table(
-      df, file = outFile, col.names = TRUE, row.names = FALSE, quote=FALSE)
+      df, file=outFile, col.names=TRUE, row.names=FALSE, quote=FALSE)
     rm(df,  pvals, testVector, acceptableIndices, testedPvals)
     gc()
     DeleteMultipleFiles(c(outputFile, outVectorName, outTableName))
@@ -2011,21 +2028,21 @@ combineTestResults  <-
 
     if(!(file.exists(testTableFile)))
     {
-      stop( paste0(testTableFile," does not exist"))
+      stop(testTableFile," does not exist")
     }
 
     if(!(file.exists(countTableFile)))
     {
-      stop( paste0(countTableFile," does not exist"))
+      stop(countTableFile," does not exist")
     }
 
     if(!(file.exists(motifFile)))
     {
-      stop( paste0(motifFile," does not exist"))
+      stop(motifFile," does not exist")
     }
 
   testResults <- utils::read.table(
-    file = testTableFile, header = TRUE, stringsAsFactors = FALSE)
+    file=testTableFile, header=TRUE, stringsAsFactors=FALSE)
   motifNumber <- nrow(testResults)
   testedIndices <- which((testResults$Test=="Tested")==TRUE)
   #select the accepted motifs rows
@@ -2035,10 +2052,10 @@ combineTestResults  <-
   gc()#garbage collection
   # Read the count table
   countTable <- utils::read.table(
-    file = countTableFile, header = TRUE, stringsAsFactors = FALSE)
+    file=countTableFile, header=TRUE, stringsAsFactors=FALSE)
   replicateNumber <- ncol(countTable)/3
-  means <- c(1:replicateNumber) * 0
-  for (i in c(1:replicateNumber)){
+  means <- seq_len(replicateNumber) * 0
+  for (i in seq_len(replicateNumber)){
     means[i] <- mean(countTable[testedIndices,i])
   }
   #select the accepted motifs rows
@@ -2046,7 +2063,7 @@ combineTestResults  <-
   gc()#garbage collection
   # Read the motifs table
   motifs <- utils::read.table(
-    file = motifFile, header = FALSE, stringsAsFactors = FALSE)
+    file=motifFile, header=FALSE, stringsAsFactors=FALSE)
   #select the accepted motifs rows
   motifs  <- motifs[acceptedMotifsIndices,]
   gc()#garbage collection
@@ -2072,20 +2089,20 @@ combineTestResults  <-
   }
   df <- as.data.frame(c(df, countTable))
   utils::write.table(
-    df, file = acceptedMotifsOutputFile,
-    row.names = FALSE,
-    col.names = TRUE,
-    quote = FALSE
+    df, file=acceptedMotifsOutputFile,
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE
     )
   rm(df,countTable,acceptedMotifsIndices,testResults, testedIndices)
   gc()#garbage collection
   bindingSites <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(motifs[,1]),
-    ranges = IRanges::IRanges(motifs[,2], motifs[,3])
+    ranges=IRanges::IRanges(motifs[,2], motifs[,3])
     )
   bindingRegions <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(motifs[,1]),
-    ranges = IRanges::IRanges(
+    ranges=IRanges::IRanges(
       (motifs[,2]+motifs[,3])/2, (motifs[,2]+motifs[,3])/2)+windowSize
     )
   rm(motifs)
@@ -2100,7 +2117,7 @@ combineTestResults  <-
   bindingRegionNumber <- length(bindingRegions)
   if(bindingRegionNumber>0)
   {
-    for(i in c(1:bindingRegionNumber))
+    for(i in seq_len(bindingRegionNumber))
     {
       tmpBindingIndices <-
         S4Vectors::subjectHits(bindingRegionSitesIndices)[
@@ -2108,7 +2125,7 @@ combineTestResults  <-
       sitesVector[i] <- paste(round(
         (BiocGenerics::start(bindingSites)[tmpBindingIndices]+
            BiocGenerics::end(bindingSites)[tmpBindingIndices])/2),
-        collapse = ",")
+        collapse=",")
     }
   }
 
@@ -2120,10 +2137,10 @@ combineTestResults  <-
     bindinSites=sitesVector
     )
   utils::write.table(df,
-                     file = acceptedRegionsOutputFile,
-                     row.names = FALSE,
-                     col.names = TRUE,
-                     quote = FALSE,
+                     file=acceptedRegionsOutputFile,
+                     row.names=FALSE,
+                     col.names=TRUE,
+                     quote=FALSE,
                      sep="\t"
                      )
 
@@ -2164,7 +2181,7 @@ DetectBindingSites  <-
   replicateNumber <-  length(chipSeq$IPfiles)
   if(From=="Motif")
   {
-    motifFile <- file.path(currentDir , "Metadata","Motif_Locations")
+    motifFile <- file.path(currentDir, "Metadata", "Motif_Locations")
     if(is.na(GivenRegion)[1])
     {
       findMotifs(motif=motif,
@@ -2175,7 +2192,7 @@ DetectBindingSites  <-
                  mainCHRs=TRUE,
                  firstCHR=FALSE,
                  MotifLocationName=
-                   file.path(currentDir , "Metadata","Motif_Locations")
+                   file.path(currentDir, "Metadata", "Motif_Locations")
                  ) # only main chromosomes otherwise FALSE, FALSE
 
     } else {
@@ -2187,14 +2204,14 @@ DetectBindingSites  <-
                  mainCHRs=TRUE,
                  firstCHR=FALSE,
                  MotifLocationName=
-                   file.path(currentDir , "Metadata","Motif_Locations"),
+                   file.path(currentDir, "Metadata", "Motif_Locations"),
                  limitedRegion=GivenRegion
                  ) # only main chromosomes otherwise FALSE, FALSE
     }
 
   } else if(From=="Bed"){
-    motifFile <- file.path(currentDir , "Metadata","Motif_Locations")
-    file.copy(from=BedFile, to = motifFile)
+    motifFile <- file.path(currentDir, "Metadata", "Motif_Locations")
+    file.copy(from=BedFile, to=motifFile)
   } else
   {
     stop("Motif centeric peak calling can be done on either a string motif or
@@ -2202,29 +2219,29 @@ DetectBindingSites  <-
   }
 
   motifCount(motifFile=motifFile, chipSeq=chipSeq, windowSize=windowSize,
-             outputName=file.path(currentDir , "Metadata","motifCountTable"),
-             currentDir=file.path(currentDir , "Metadata")
+             outputName=file.path(currentDir, "Metadata", "motifCountTable"),
+             currentDir=file.path(currentDir, "Metadata")
              )
 
   sequencingStatitic <- motifTablePreProcess(
-    countTableFile=file.path(currentDir , "Metadata","motifCountTable"),
-    outFile=file.path(currentDir , "Metadata","TestResults"),
-    currentDir=file.path(currentDir , "Metadata")
+    countTableFile=file.path(currentDir, "Metadata","motifCountTable"),
+    outFile=file.path(currentDir, "Metadata","TestResults"),
+    currentDir=file.path(currentDir, "Metadata")
     )
 
   FDRcutoff <- DetectFdrCutoffBH(
-    TestTableFile=file.path(currentDir , "Metadata","TestResults"),
+    TestTableFile=file.path(currentDir, "Metadata", "TestResults"),
     fdrValue=fdrValue
     )
 
   averageBindings <- combineTestResults(
     motifFile=motifFile,
     acceptedMotifsOutputFile=
-      file.path(currentDir , "Metadata","BindingMotifsTable"),
+      file.path(currentDir, "Metadata", "BindingMotifsTable"),
     acceptedRegionsOutputFile=
-      file.path(currentDir , "Metadata","BindingRegions"),
-    countTableFile=file.path(currentDir , "Metadata","motifCountTable"),
-    testTableFile=file.path(currentDir , "Metadata","TestResults"),
+      file.path(currentDir, "Metadata", "BindingRegions"),
+    countTableFile=file.path(currentDir, "Metadata", "motifCountTable"),
+    testTableFile=file.path(currentDir, "Metadata", "TestResults"),
     fdrCutoff=FDRcutoff,
     windowSize=windowSize
     )
@@ -2234,48 +2251,48 @@ DetectBindingSites  <-
     averageBindings=averageBindings,
     windowSize=windowSize,
     acceptedRegionsOutputFile=
-      file.path(currentDir , "Metadata","BindingRegions"),
-    currentDir=file.path(currentDir , "Metadata")
+      file.path(currentDir, "Metadata", "BindingRegions"),
+    currentDir=file.path(currentDir, "Metadata")
     )
 
   motifStatistics <- decomposeBindingSignal(
     windowSize=windowSize,
     replicateNumber=replicateNumber,
     acceptedRegionsOutputFile=
-      file.path(currentDir , "Metadata","BindingRegions"),
+      file.path(currentDir, "Metadata", "BindingRegions"),
     acceptedMotifsOutputFile=
-      file.path(currentDir , "Metadata","BindingMotifsTable"),
-    currentDir=file.path(currentDir , "Metadata")
+      file.path(currentDir, "Metadata", "BindingMotifsTable"),
+    currentDir=file.path(currentDir, "Metadata")
     )
 
   DeleteMultipleFiles(
     c(as.character(chipSeq$IPfiles), as.character(chipSeq$BackgroundFiles)))
 
-  file.copy(file.path(currentDir ,"Metadata","BindingRegions"), currentDir)
+  file.copy(file.path(currentDir, "Metadata", "BindingRegions"), currentDir)
   if(replicateNumber==1)
   {
-    file.copy(file.path(currentDir ,"Metadata","BindingMotifsTable"),
+    file.copy(file.path(currentDir, "Metadata", "BindingMotifsTable"),
               currentDir)
   }else
   {
     tmpTable <- utils::read.table(
-      file.path(currentDir ,"Metadata","BindingMotifsTable"),
-      header = TRUE,
+      file.path(currentDir, "Metadata", "BindingMotifsTable"),
+      header=TRUE,
       stringsAsFactors=FALSE
       )
 
     utils::write.table(
-      tmpTable[,c(1:5,8:(dim(tmpTable)[2]))],
-      file = file.path(currentDir ,"BindingMotifsTable"),
-      row.names = FALSE,
-      col.names = TRUE,
-      quote = FALSE
+      tmpTable[,c(seq_len(5), seq(from=8, to=(dim(tmpTable)[2])))],
+      file=file.path(currentDir, "BindingMotifsTable"),
+      row.names=FALSE,
+      col.names=TRUE,
+      quote=FALSE
       )
   }
 
   return(list(
     FRiP=FRiP,
-    sequencingStatitic= sequencingStatitic,
+    sequencingStatitic=sequencingStatitic,
     motifStatistics=motifStatistics))
 }
 
@@ -2309,7 +2326,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
     ends <- BiocGenerics::end(gal)
     shortReads <- GenomicRanges::GRanges(
       seqnames=S4Vectors::Rle(GenomeInfoDb::seqnames(gal)),
-      ranges = IRanges::IRanges(round((starts+ends)/2),
+      ranges=IRanges::IRanges(round((starts+ends)/2),
                                 end=round((starts+ends)/2)
                                 )
       )
@@ -2353,7 +2370,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
       seqnames=
         S4Vectors::Rle(as.character(
           GenomeInfoDb::seqnames(GenomicAlignments::first(gal)))),
-      ranges = IRanges::IRanges(
+      ranges=IRanges::IRanges(
         round((starts+ends)/2), end=round((starts+ends)/2))
       )
 
@@ -2366,7 +2383,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
     Table <- utils::read.table(InputFile, header=FALSE, stringsAsFactors=FALSE)
     if(dim(Table)[2]<3)
     {
-      stop("BEDSE talbe must have at least three columns")
+      stop("BEDSE table must have at least three columns")
     }
     chrs <- as.character(Table[,1])
     starts<- as.numeric(Table[,2])
@@ -2375,7 +2392,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
     gc()
     shortReads <- GenomicRanges::GRanges(
       seqnames=S4Vectors::Rle(chrs),
-      ranges =
+      ranges=
         IRanges::IRanges(round((starts+ends)/2), end=round((starts+ends)/2))
       )
 
@@ -2389,7 +2406,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
     Table <- utils::read.table(InputFile, header=FALSE, stringsAsFactors=FALSE)
     if(dim(Table)[2]<6)
     {
-      stop("BEDPE talbe must have at least six columns")
+      stop("BEDPE table must have at least six columns")
     }
     chrs <- as.character(Table[,1])
     starts<- pmin(as.numeric(Table[,2]), as.numeric(Table[,5]))
@@ -2398,7 +2415,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
     gc()
     shortReads <- GenomicRanges::GRanges(
       seqnames=S4Vectors::Rle(chrs),
-      ranges =
+      ranges=
         IRanges::IRanges(round((starts+ends)/2), end=round((starts+ends)/2))
       )
 
@@ -2439,7 +2456,7 @@ generate1ntBedAlignment  <- function(InputFile, bedFile, format=""){
 #' @examples
 #'
 #' # FUR candidate motifs in NC_000913 E. coli
-#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
+#' FurMotifs=system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
 #' # ChIP-seq datasets in bed single end format
 #' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
@@ -2471,7 +2488,7 @@ DetectBindingSitesBed <-
 
   if(!(file.exists(BedFile)))
   {
-    stop(paste0(BedFile), " does not exist")
+    stop(BedFile, " does not exist")
   }
   BedFile <- normalizePath(BedFile)
 
@@ -2483,15 +2500,15 @@ DetectBindingSitesBed <-
     stop("Length of IPfiles and BackgroundFiles must be identical")
   }
 
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     if(!(file.exists(IPfiles[i])))
     {
-      stop(paste0(IPfiles[i]), " does not exist")
+      stop(IPfiles[i], " does not exist")
     }
     if(!(file.exists(BackgroundFiles[i])))
     {
-      stop(paste0(BackgroundFiles[i]), " does not exist")
+      stop(BackgroundFiles[i], " does not exist")
     }
 
     IPfiles[i] <- normalizePath(IPfiles[i])
@@ -2499,34 +2516,34 @@ DetectBindingSitesBed <-
 
   }
 
-  chipSeq <- data.frame( IPfiles=IPfiles , BackgroundFiles=BackgroundFiles)
+  chipSeq <- data.frame(IPfiles=IPfiles, BackgroundFiles=BackgroundFiles)
 
   if(!((format=="BAMPE")||(format=="BAMSE")||(format=="BEDPE")
        ||(format=="BEDSE")))
   {
-    stop("Input format should be to one of BAMPE, BAMSE, BEDPE, or BEDSE ")
+    stop("Input format should be to one of BAMPE, BAMSE, BEDPE, or BEDSE")
   }
 
   BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
   if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(BSGstring, " has not been installed"))
+    stop(BSGstring, " has not been installed")
   }
 
   currentDir <- getwd()
 
   if (dir.exists(file.path(currentDir, expName))){
-    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
+    unlink(x=(file.path(currentDir, expName)), recursive=TRUE)
   }
 
   dir.create(file.path(currentDir, expName))
   
-  if (!file.exists(file.path(currentDir , expName, "Metadata"))){
-    dir.create(file.path(currentDir, expName, "Metadata" ))
+  if (!file.exists(file.path(currentDir, expName, "Metadata"))){
+    dir.create(file.path(currentDir, expName, "Metadata"))
   }
 
 
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     generate1ntBedAlignment(
       InputFile=as.character(chipSeq$IPfiles[i]),
@@ -2547,49 +2564,50 @@ DetectBindingSitesBed <-
 
   chipSeq <- data.frame(
     IPfiles=file.path(currentDir, expName, "Metadata",
-                      paste0("IP_",1:replicateNumber,".bed")
+                      paste0("IP_",seq_len(replicateNumber),".bed")
                       ),
-    BackgroundFiles=file.path(currentDir, expName, "Metadata",
-                              paste0("Background_",1:replicateNumber,".bed")
+    BackgroundFiles=
+      file.path(currentDir, expName, "Metadata",
+                paste0("Background_",seq_len(replicateNumber),".bed")
     )
   )
 
 
   peakCallingStatistics <- DetectBindingSites(
     From="Bed", BedFile=BedFile,  chipSeq=chipSeq, genome=genome,
-    genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue, windowSize= windowSize,
-    currentDir = file.path(currentDir, expName)
+    genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue, windowSize=windowSize,
+    currentDir=file.path(currentDir, expName)
     )
 
   # Write ChIP-seq statistics in a file
   FRiPs <- ""
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     FRiPs <- paste0(FRiPs, " ",peakCallingStatistics$FRiP[i])
   }
 
   dfStats <- data.frame(
     replicateNumber=replicateNumber,
-    NonSequencedMotifsRatio =
+    NonSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$nonSequenced,
-    underSequencedMotifsRatio =
+    underSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$underBinding,
-    overSequencedMotifsRatio =
+    overSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$overBinding,
-    skewedMotifsRejectionNumber =
+    skewedMotifsRejectionNumber=
       peakCallingStatistics$motifStatistics$skewnessTestRejected,
-    decomposedMotifsRejectionNumber =
+    decomposedMotifsRejectionNumber=
       peakCallingStatistics$motifStatistics$decompositionRejected,
-    acceptedMotifsNumber = peakCallingStatistics$motifStatistics$accepted,
-    FRiPs = FRiPs
+    acceptedMotifsNumber=peakCallingStatistics$motifStatistics$accepted,
+    FRiPs=FRiPs
   )
   utils::write.table(
     dfStats,
-    file = file.path(currentDir , expName, "Statistics.tsv"),
-    row.names = FALSE,
-    col.names = TRUE,
-    quote = FALSE,
-    sep = "\t"
+    file=file.path(currentDir, expName, "Statistics.tsv"),
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE,
+    sep="\t"
     )
 
   return(peakCallingStatistics)
@@ -2635,20 +2653,20 @@ DetectBindingSitesBed <-
 #'  # Granages region for motif search           
 #'    NC_000913_Coordiante <-
 #'      GenomicRanges::GRanges(seqnames=S4Vectors::Rle("NC_000913"),
-#'                             ranges = IRanges::IRanges(1, 4639675))           
+#'                             ranges=IRanges::IRanges(1, 4639675))           
 #'             
 #' FURfeStringInputStats <- 
-#'   DetectBindingSitesMotif(motif = "GWWTGAGAA",
-#'                           mismatchNumber = 1,
-#'                           IPfiles=IPFe, 
-#'                           BackgroundFiles=Inputs, 
-#'                           genome="Ecoli",
-#'                           genomeBuild="20080805",
-#'                           DB= "NCBI",
-#'                           expName="FUR_Fe_StringInput",
-#'                           format="BEDSE",
-#'                           GivenRegion = NC_000913_Coordiante 
-#'                          )
+#'   DetectBindingSitesMotif(motif="GWWTGAGAA",
+#'    mismatchNumber=1,
+#'    IPfiles=IPFe, 
+#'    BackgroundFiles=Inputs, 
+#'    genome="Ecoli",
+#'    genomeBuild="20080805",
+#'    DB="NCBI",
+#'    expName="FUR_Fe_StringInput",
+#'    format="BEDSE",
+#'    GivenRegion=NC_000913_Coordiante 
+#'    )
 #'
 #'                                       
 #' @seealso
@@ -2658,7 +2676,7 @@ DetectBindingSitesBed <-
 
 DetectBindingSitesMotif <-
   function(motif, mismatchNumber, IPfiles, BackgroundFiles, genome, genomeBuild,
-           DB= "UCSC", fdrValue=0.05, expName="Motif_Centric_Peaks",
+           DB="UCSC", fdrValue=0.05, expName="Motif_Centric_Peaks",
            windowSize=100, format="",GivenRegion=NA)
 {
 
@@ -2669,15 +2687,15 @@ DetectBindingSitesMotif <-
     stop("Length of IPfiles and BackgroundFiles must be identical")
   }
 
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     if(!(file.exists(IPfiles[i])))
     {
-      stop(paste0(IPfiles[i]), " does not exist")
+      stop(IPfiles[i], " does not exist")
     }
     if(!(file.exists(BackgroundFiles[i])))
     {
-      stop(paste0(BackgroundFiles[i]), " does not exist")
+      stop(BackgroundFiles[i], " does not exist")
     }
 
     IPfiles[i] <- normalizePath(IPfiles[i])
@@ -2685,7 +2703,7 @@ DetectBindingSitesMotif <-
 
   }
 
-  chipSeq <- data.frame( IPfiles=IPfiles , BackgroundFiles=BackgroundFiles)
+  chipSeq <- data.frame( IPfiles=IPfiles, BackgroundFiles=BackgroundFiles)
 
   if(!is.na(GivenRegion)[1])
   {
@@ -2702,33 +2720,31 @@ DetectBindingSitesMotif <-
   BSGstring <- paste("BSgenome.", genome,".", DB, ".", genomeBuild,sep="")
   if (!requireNamespace(BSGstring, quietly=TRUE))
   {
-    stop(paste0(BSGstring, " has not been installed"))
+    stop(BSGstring, " has not been installed")
   }
 
 
   currentDir <- getwd()
 
   if (dir.exists(file.path(currentDir, expName))){
-    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
+    unlink(x=(file.path(currentDir, expName)), recursive=TRUE)
   }
   
   dir.create(file.path(currentDir, expName))
   
-  if (!file.exists(file.path(currentDir , expName, "Metadata"))){
+  if (!file.exists(file.path(currentDir, expName, "Metadata"))){
     dir.create(file.path(currentDir, expName, "Metadata" ))
   }
 
 
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     generate1ntBedAlignment(
       InputFile=as.character(chipSeq$IPfiles[i]),
       bedFile=file.path(currentDir, expName, "Metadata",paste0("IP_",i,".bed")),
-#      bedFile=paste0(getwd(),"/Metadata/IP_",i,".bed"),
       format=format)
     generate1ntBedAlignment(
       InputFile=as.character(chipSeq$BackgroundFiles[i]),
-#      bedFile=paste0(getwd(),"/Metadata/Background_",i,".bed"),
       bedFile=file.path(currentDir, expName, "Metadata",
                                   paste0("Background_",i,".bed")
       ),
@@ -2739,10 +2755,11 @@ DetectBindingSitesMotif <-
   gc()
   chipSeq <- data.frame(
     IPfiles=file.path(currentDir, expName, "Metadata",
-                      paste0("IP_",1:replicateNumber,".bed")
+                      paste0("IP_", seq_len(replicateNumber), ".bed")
     ),
-    BackgroundFiles=file.path(currentDir, expName, "Metadata",
-                              paste0("Background_",1:replicateNumber,".bed")
+    BackgroundFiles=
+      file.path(currentDir, expName, "Metadata",
+                paste0("Background_", seq_len(replicateNumber), ".bed")
     )
   )
   if(!is.na(GivenRegion)[1])
@@ -2750,47 +2767,47 @@ DetectBindingSitesMotif <-
     peakCallingStatistics <- DetectBindingSites(
       From="Motif", motif=motif, mismatchNumber=mismatchNumber,chipSeq=chipSeq,
       genome=genome, genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue,
-      windowSize= windowSize, GivenRegion=GivenRegion,
-      currentDir = file.path(currentDir, expName)
+      windowSize=windowSize, GivenRegion=GivenRegion,
+      currentDir=file.path(currentDir, expName)
       )
   } else {
     peakCallingStatistics <- DetectBindingSites(
       From="Motif", motif=motif, mismatchNumber=mismatchNumber,chipSeq=chipSeq,
       genome=genome, genomeBuild=genomeBuild, DB=DB, fdrValue=fdrValue,
-      windowSize= windowSize, currentDir = file.path(currentDir, expName)
+      windowSize=windowSize, currentDir=file.path(currentDir, expName)
 
       )
   }
 
   # Write ChIP-seq statistics in a file
   FRiPs <- ""
-  for(i in c(1:replicateNumber))
+  for(i in seq_len(replicateNumber))
   {
     FRiPs <- paste0(FRiPs, " ",peakCallingStatistics$FRiP[i])
   }
 
   dfStats <- data.frame(
     replicateNumber=replicateNumber,
-    NonSequencedMotifsRatio =
+    NonSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$nonSequenced,
-    underSequencedMotifsRatio =
+    underSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$underBinding,
-    overSequencedMotifsRatio =
+    overSequencedMotifsRatio=
       peakCallingStatistics$sequencingStatitic$overBinding,
-    skewedMotifsRejectionNumber =
+    skewedMotifsRejectionNumber=
       peakCallingStatistics$motifStatistics$skewnessTestRejected,
-    decomposedMotifsRejectionNumber =
+    decomposedMotifsRejectionNumber=
       peakCallingStatistics$motifStatistics$decompositionRejected,
-    acceptedMotifsNumber = peakCallingStatistics$motifStatistics$accepted,
-    FRiPs = FRiPs
+    acceptedMotifsNumber=peakCallingStatistics$motifStatistics$accepted,
+    FRiPs=FRiPs
   )
   utils::write.table(
     dfStats,
-    file = file.path(currentDir , expName, "Statistics.tsv"),
-    row.names = FALSE,
-    col.names = TRUE,
-    quote = FALSE,
-    sep = "\t"
+    file=file.path(currentDir, expName, "Statistics.tsv"),
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE,
+    sep="\t"
     )
 
   return(peakCallingStatistics)
@@ -2815,7 +2832,7 @@ DetectBindingSitesMotif <-
 #' @examples
 #'
 #' # FUR candidate motifs in NC_000913 E. coli
-#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
+#' FurMotifs=system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
 #' # ChIP-seq datasets fe in bed single end format
 #' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
@@ -2824,28 +2841,28 @@ DetectBindingSitesMotif <-
 #'             system.file("extdata", "Input2.bed", package="Motif2Site"))
 #' FURfeBedInputStats <- 
 #'   DetectBindingSitesBed(BedFile=FurMotifs,
-#'                         IPfiles=IPFe, 
-#'                         BackgroundFiles=Inputs, 
-#'                         genome="Ecoli",
-#'                         genomeBuild="20080805",
-#'                         DB="NCBI",
-#'                         expName="FUR_Fe_BedInput",
-#'                         format="BEDSE"
-#'                        )
+#'    IPfiles=IPFe, 
+#'    BackgroundFiles=Inputs, 
+#'    genome="Ecoli",
+#'    genomeBuild="20080805",
+#'    DB="NCBI",
+#'    expName="FUR_Fe_BedInput",
+#'    format="BEDSE"
+#'    )
 #'
 #' # ChIP-seq datasets dpd in bed single end format
 #' IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
 #'         system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
 #' FURdpdBedInputStats <- 
 #'   DetectBindingSitesBed(BedFile=FurMotifs,
-#'                         IPfiles=IPDpd, 
-#'                         BackgroundFiles=Inputs, 
-#'                         genome="Ecoli",
-#'                         genomeBuild="20080805",
-#'                         DB="NCBI",
-#'                         expName="FUR_Dpd_BedInput",
-#'                         format="BEDSE"
-#'                        )
+#'    IPfiles=IPDpd, 
+#'    BackgroundFiles=Inputs, 
+#'    genome="Ecoli",
+#'    genomeBuild="20080805",
+#'    DB="NCBI",
+#'    expName="FUR_Dpd_BedInput",
+#'    format="BEDSE"
+#'    )
 #'                        
 #'
 #' # Combine all FUR binding sites into one table
@@ -2857,11 +2874,11 @@ DetectBindingSitesMotif <-
 #'
 #' # Differential binding sites across FUR conditions fe vs dpd
 #' diffFUR <- pairwisDifferential(tableOfCountsDir="combinedFUR",
-#'                                exp1="FUR_Fe",
-#'                                exp2="FUR_Dpd",
-#'                                FDRcutoff = 0.05,
-#'                                logFCcuttoff = 1
-#'                                )
+#'    exp1="FUR_Fe",
+#'    exp2="FUR_Dpd",
+#'    FDRcutoff=0.05,
+#'    logFCcuttoff=1
+#'    )
 #' 
 #' FeUp <- diffFUR[[1]]
 #' DpdUp <- diffFUR[[2]]
@@ -2886,8 +2903,8 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
   }
 
   tableOfCounts <- utils::read.table(tableOfCountsFile,
-                                     header = TRUE,
-                                     check.names = FALSE,
+                                     header=TRUE,
+                                     check.names=FALSE,
                                      stringsAsFactors=FALSE
                                      )
 
@@ -2901,7 +2918,7 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
 
   Motifs <- GenomicRanges::GRanges(
     seqnames=S4Vectors::Rle(tableOfCounts[,1]),
-    ranges = IRanges::IRanges(tableOfCounts[,2], tableOfCounts[,3]))
+    ranges=IRanges::IRanges(tableOfCounts[,2], tableOfCounts[,3]))
 
   exp1Inds <- which((colnames(tableOfCounts)==exp1))
   exp2Inds <- which((colnames(tableOfCounts)==exp2))
@@ -2912,11 +2929,11 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
   notNA <- which(!is.na(rowSums(tableOfCounts)))
   Motifs <-  Motifs[notNA]
   tableOfCounts <- tableOfCounts[notNA,]
-  rownames(tableOfCounts) <- as.character(c(1:dim(tableOfCounts)[1]))
+  rownames(tableOfCounts) <- as.character(seq_len(dim(tableOfCounts)[1]))
 
   tableOfCounts <- edgeR::DGEList(
-    counts = tableOfCounts,
-    group = c(rep(exp1,length(exp1Inds)),rep(exp2,length(exp2Inds))))
+    counts=tableOfCounts,
+    group=c(rep(exp1,length(exp1Inds)),rep(exp2,length(exp2Inds))))
 
   tableOfCounts <- edgeR::calcNormFactors(tableOfCounts, method="TMM")
 
@@ -2927,12 +2944,12 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
   colnames(design) <- levels(Group)
 
   # GLM test
-  tableOfCounts <- edgeR::estimateDisp(tableOfCounts, design = design)
+  tableOfCounts <- edgeR::estimateDisp(tableOfCounts, design=design)
   gc()
   fit <- edgeR::glmFit(tableOfCounts, design=design)
-  dgeLRTtest <- edgeR::glmLRT(fit, coef = 2)
+  dgeLRTtest <- edgeR::glmLRT(fit, coef=2)
 
-  resLRT <- edgeR::topTags(dgeLRTtest, n = nrow(tableOfCounts$counts))
+  resLRT <- edgeR::topTags(dgeLRTtest, n=nrow(tableOfCounts$counts))
   selectedLRT <-
     resLRT$table$FDR < FDRcutoff & abs(resLRT$table$logFC) > logFCcuttoff
   selectedLRT <- resLRT$table[selectedLRT, ]
@@ -2944,9 +2961,10 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
   motifs1 <- Motifs[as.numeric(row.names(selectedLRT)
                                [which((selectedLRT$updown=="down")==TRUE)])]
 
-  totalResults <- as.data.frame(c(as.data.frame(Motifs)[,1:3],dgeLRTtest$table))
+  totalResults <- 
+    as.data.frame(c(as.data.frame(Motifs)[, seq_len(3)], dgeLRTtest$table))
 
-  diffs <- list(Motif1Up=motifs1,Motif2Up=motifs2,TotalResults=totalResults )
+  diffs <- list(Motif1Up=motifs1, Motif2Up=motifs2, TotalResults=totalResults)
   return(diffs)
 }
 
@@ -2973,7 +2991,7 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
 #' @examples
 #'
 #' # FUR candidate motifs in NC_000913 E. coli
-#' FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
+#' FurMotifs=system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 #'
 #' # ChIP-seq datasets fe in bed single end format
 #' IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
@@ -2982,36 +3000,36 @@ pairwisDifferential  <- function(tableOfCountsDir="", exp1, exp2,
 #'             system.file("extdata", "Input2.bed", package="Motif2Site"))
 #' FURfeBedInputStats <- 
 #'   DetectBindingSitesBed(BedFile=FurMotifs,
-#'                         IPfiles=IPFe, 
-#'                         BackgroundFiles=Inputs, 
-#'                         genome="Ecoli",
-#'                         genomeBuild="20080805",
-#'                         DB="NCBI",
-#'                         expName="FUR_Fe_BedInput",
-#'                         format="BEDSE"
-#'                        )
+#'    IPfiles=IPFe, 
+#'    BackgroundFiles=Inputs, 
+#'    genome="Ecoli",
+#'    genomeBuild="20080805",
+#'    DB="NCBI",
+#'    expName="FUR_Fe_BedInput",
+#'    format="BEDSE"
+#'    )
 #'
 #' # ChIP-seq datasets dpd in bed single end format
 #' IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
 #'         system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
 #' FURdpdBedInputStats <- 
 #'   DetectBindingSitesBed(BedFile=FurMotifs,
-#'                         IPfiles=IPDpd, 
-#'                         BackgroundFiles=Inputs, 
-#'                         genome="Ecoli",
-#'                         genomeBuild="20080805",
-#'                         DB="NCBI",
-#'                         expName="FUR_Dpd_BedInput",
-#'                         format="BEDSE"
-#'                        )
+#'    IPfiles=IPDpd, 
+#'    BackgroundFiles=Inputs, 
+#'    genome="Ecoli",
+#'    genomeBuild="20080805",
+#'    DB="NCBI",
+#'    expName="FUR_Dpd_BedInput",
+#'    format="BEDSE"
+#'    )
 #'                        
 #'
 #' # Combine all FUR binding sites into one table
 #' corMAT <- recenterBindingSitesAcrossExperiments(
-#'   expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
-#'   experimentNames=c("FUR_Fe","FUR_Dpd"),
-#'   expName="combinedFUR",
-#'   )
+#'     expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+#'     experimentNames=c("FUR_Fe","FUR_Dpd"),
+#'     expName="combinedFUR",
+#'     )
 #' corMAT
 #'
 #' @seealso
@@ -3044,7 +3062,7 @@ recenterBindingSitesAcrossExperiments <-
   replicateNumbers <- rep(0, datasetNumber)
 
 
-  for(i in c(1:datasetNumber))
+  for(i in seq_len(datasetNumber))
   {
     if (file.exists(expLocations[i]))
     {
@@ -3053,29 +3071,28 @@ recenterBindingSitesAcrossExperiments <-
                                "Statistics.tsv"))))
         {
 
-        stop(paste0("In directory ",as.character(expLocations[i]),
-                    " Statistics.tsv does not exists"))
+        stop("In directory ", as.character(expLocations[i]),
+                    " Statistics.tsv does not exists")
 
       }else
       {
-        StatTable <- file.path(as.character(expLocations[i]),"Statistics.tsv")
+        StatTable <- file.path(as.character(expLocations[i]), "Statistics.tsv")
         replicateNumbers[i] <- (
           utils::read.table(StatTable,
-                            header = TRUE,
-                            sep = "\t",
+                            header=TRUE,
+                            sep="\t",
                             stringsAsFactors=FALSE)
           )$replicateNumber
       }
     }else
     {
-      stop(paste0("Direcotry ",as.character(expLocations[i]),
-                  " does not exists"))
+      stop("Direcotry ", as.character(expLocations[i]), " does not exists")
     }
 
   }
 
   df_datasets <- data.frame(
-    locations=expLocations ,
+    locations=expLocations,
     experiments=experimentNames,
     replicates=replicateNumbers
     )
@@ -3085,8 +3102,8 @@ recenterBindingSitesAcrossExperiments <-
     if (!(file.exists(file.path(as.character(df_datasets$locations[1]),
                              "Metadata"))))
     {
-      stop(paste0("Metadata directory does not exist in ",
-                  df_datasets$locations[1], " folder"))
+      stop("Metadata directory does not exist in ",
+           df_datasets$locations[1], " folder")
     }
 
     if (!(file.exists(file.path(as.character(df_datasets$locations[1]),
@@ -3098,17 +3115,17 @@ recenterBindingSitesAcrossExperiments <-
 
       Table <- utils::read.table(
         file=file.path(as.character(df_datasets$locations[1]),
-                    "Metadata", "BindingMotifsTable"), header = TRUE,
+                    "Metadata", "BindingMotifsTable"), header=TRUE,
         stringsAsFactors=FALSE)
 
       Motifs <- GenomicRanges::GRanges(
         seqnames=S4Vectors::Rle(Table[,1]),
-        ranges = IRanges::IRanges(Table[,2], Table[,3]))
+        ranges=IRanges::IRanges(Table[,2], Table[,3]))
 
     }
 
   } else{
-    stop(paste0("Direcotry ",df_datasets$locations[1], " does not exists"))
+    stop("Direcotry ", df_datasets$locations[1], " does not exists")
   }
 
   for(i in c(2:datasetNumber))
@@ -3117,29 +3134,29 @@ recenterBindingSitesAcrossExperiments <-
       if (!(file.exists(file.path(as.character(df_datasets$locations[i]),
                                "Metadata"))))
       {
-        stop(paste0("Metadata directory does not exist in ",
-                    df_datasets$locations[1], " folder"))
+        stop("Metadata directory does not exist in ",
+             df_datasets$locations[1], " folder")
       }
 
       if (!(file.exists(file.path(as.character(df_datasets$locations[i]),
                                "Metadata", "BindingMotifsTable"))))
         {
-        stop(paste0("Binding motif table does not exists in the ", i,
-                    "th experiment Metadata folder"))
+        stop("Binding motif table does not exists in the ", i,
+             "th experiment Metadata folder")
       } else {
         Table <- utils::read.table(
           file=file.path(as.character(df_datasets$locations[i]),
                       "Metadata", "BindingMotifsTable"),
-          header = TRUE, stringsAsFactors=FALSE)
+          header=TRUE, stringsAsFactors=FALSE)
         tmpGranges <- GenomicRanges::GRanges(
           seqnames=S4Vectors::Rle(Table[,1]),
-          ranges = IRanges::IRanges(Table[,2], Table[,3]))
+          ranges=IRanges::IRanges(Table[,2], Table[,3]))
         Motifs <- GenomicRanges::reduce(c(Motifs,tmpGranges))
 
       }
 
     } else{
-      stop(paste0("Direcotry ",df_datasets$locations[i], " does not exists"))
+      stop("Direcotry ",df_datasets$locations[i], " does not exists")
     }
   }
 
@@ -3150,73 +3167,81 @@ recenterBindingSitesAcrossExperiments <-
 
   acceptedMotifs <- rep(FALSE, motifNumber)
 
-  countMatrix <- matrix(NA, nrow = motifNumber,
-                        ncol = sum(df_datasets$replicates))
+  countMatrix <- matrix(NA, nrow=motifNumber,
+                        ncol=sum(df_datasets$replicates))
   colnames(countMatrix) <- rep(df_datasets$experiments, df_datasets$replicates)
 
-  pvalMatrix <- matrix(NA, nrow = motifNumber, ncol = datasetNumber)
+  pvalMatrix <- matrix(NA, nrow=motifNumber, ncol=datasetNumber)
   colnames(pvalMatrix) <- df_datasets$experiments
 
-  for(i in c(1:datasetNumber))
+  for(i in seq_len(datasetNumber))
   {
     if (!(file.exists(file.path(as.character(df_datasets$locations[i]),
                              "Metadata", "Motif_Locations"))))
      {
-      stop(paste0("Motif_Locations file does not exists in the ", i,
-                  "th experiment Metadata folder"))
+      stop("Motif_Locations file does not exists in the ", i,
+           "th experiment Metadata folder")
     }
     if (!(file.exists(file.path(as.character(df_datasets$locations[i]),
                              "Metadata", "TestResults"))))
     {
-      stop(paste0("TestResults file does not exists in the ", i,
-                  "th experiment Metadata folder"))
+      stop("TestResults file does not exists in the ", i,
+           "th experiment Metadata folder")
     }
 
     if (!(file.exists(file.path(as.character(df_datasets$locations[i]),
                              "Metadata", "motifCountTable")))){
-      stop(paste0("motifCountTable file does not exists in the ", i,
-                  "th experiment Metadata folder"))
+      stop("motifCountTable file does not exists in the ", i,
+           "th experiment Metadata folder")
     }
 
 
-    motifLocations <- Bed2Granges(file.path(as.character(df_datasets$locations[i])
-                                         ,"Metadata", "Motif_Locations"))
+    motifLocations <- 
+      Bed2Granges(file.path(as.character(df_datasets$locations[i]),
+                            "Metadata",
+                            "Motif_Locations"
+                            )
+                  )
     tmpInds <- GenomicRanges::findOverlaps(motifLocations,Motifs)
     rm(motifLocations)
     gc()
 
     testTable <- utils::read.table(
       file=file.path(as.character(df_datasets$locations[i]),
-                  "Metadata", "TestResults")
-      , header = TRUE, stringsAsFactors=FALSE)
+                     "Metadata",
+                     "TestResults"
+                     ),
+      header=TRUE,
+      stringsAsFactors=FALSE
+      )
     pvalMatrix[S4Vectors::subjectHits(tmpInds),i] <-
       testTable$Pvalue[S4Vectors::queryHits(tmpInds)]
     rm(testTable)
     gc()
 
     base <- 0
-    if(i>1){ base <- sum(df_datasets$replicates[1:(i-1)])  }
+    if(i>1){ base <- sum(df_datasets$replicates[seq_len(i-1)])  }
 
 
     motifCountTable <- utils::read.table(
       file=file.path(as.character(df_datasets$locations[i]),
-                  "Metadata", "motifCountTable"), header = TRUE,
+                  "Metadata", "motifCountTable"), header=TRUE,
       stringsAsFactors=FALSE)
     countMatrix[S4Vectors::subjectHits(tmpInds),
                 (base+1):(base+df_datasets$replicates[i])]<-
       as.matrix(motifCountTable[S4Vectors::queryHits(tmpInds),
-                                1:df_datasets$replicates[i]])
+                                seq_len(df_datasets$replicates[i])])
     rm(motifCountTable)
     gc()
 
   }
 
-  bindingMatrix <- matrix("nonBinding", nrow = motifNumber,
-                          ncol = datasetNumber)
-  for(i in c(1:datasetNumber))
+  bindingMatrix <- matrix("nonBinding", nrow=motifNumber,
+                          ncol=datasetNumber)
+  for(i in seq_len(datasetNumber))
   {
     bindingMatrix[which(is.na(pvalMatrix[,i])),i] <- "NotTested"
-    pvalsAdjusted <- stats::p.adjust(pvalMatrix[,i], method = "BH")
+    pvalsAdjusted <- stats::p.adjust(pvalMatrix[,i], method="BH")
     bindingMatrix[which((pvalsAdjusted<fdrValue)==TRUE),i] <- "Binding"
     acceptedMotifs[which((pvalsAdjusted<fdrCrossExp)==TRUE)] <- TRUE
   }
@@ -3225,7 +3250,7 @@ recenterBindingSitesAcrossExperiments <-
   currentDir <- getwd()
 
   if (dir.exists(file.path(currentDir, expName))){
-    unlink(x=(file.path(currentDir, expName)), recursive = TRUE)
+    unlink(x=(file.path(currentDir, expName)), recursive=TRUE)
   }
   
   dir.create(file.path(currentDir, expName))
@@ -3238,25 +3263,27 @@ recenterBindingSitesAcrossExperiments <-
   )
 
   df <- as.data.frame(c(dfMotif,as.data.frame(bindingMatrix),
-                        as.data.frame(countMatrix)),check.names = FALSE)
+                        as.data.frame(countMatrix)),check.names=FALSE)
   df <- df[acceptedMotifs,]
   utils::write.table( df,
-                      file = file.path(currentDir, expName, "CombinedMatrix"),
-                      quote = FALSE,
-                      row.names = FALSE,
-                      col.names = TRUE,
-                      sep = "\t"
+                      file=file.path(currentDir, expName, "CombinedMatrix"),
+                      quote=FALSE,
+                      row.names=FALSE,
+                      col.names=TRUE,
+                      sep="\t"
                       )
 
   countMatrix <- countMatrix[acceptedMotifs,]
-  corMat <- matrix(1, ncol = dim(countMatrix)[2], nrow = dim(countMatrix)[2])
+  corMat <- matrix(1, ncol=dim(countMatrix)[2], nrow=dim(countMatrix)[2])
   colnames(corMat) <- colnames(countMatrix)
   rownames(corMat) <- colnames(countMatrix)
 
-  for(i in c(1:(dim(countMatrix)[2]-1))){
-    for(j in c((i+1):(dim(countMatrix)[2]))){
-      corMat[i,j] <- stats::cor(log2(countMatrix[,i]+1),log2(countMatrix[,j]+1),
-                                use = "pairwise.complete.obs")
+  for(i in seq_len(dim(countMatrix)[2]-1)){
+    for(j in seq(from=(i+1), to=(dim(countMatrix)[2]))){
+      corMat[i,j] <- 
+        stats::cor(log2(countMatrix[,i]+1), log2(countMatrix[,j]+1),
+                                use="pairwise.complete.obs"
+                   )
       corMat[j,i] <- corMat[i,j]
     }
   }

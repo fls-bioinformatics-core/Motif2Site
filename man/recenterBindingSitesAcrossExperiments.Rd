@@ -37,7 +37,7 @@ Experiment folders must be generated either by
 \examples{
 
 # FUR candidate motifs in NC_000913 E. coli
-FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
+FurMotifs=system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 
 # ChIP-seq datasets fe in bed single end format
 IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
@@ -46,36 +46,36 @@ Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
             system.file("extdata", "Input2.bed", package="Motif2Site"))
 FURfeBedInputStats <- 
   DetectBindingSitesBed(BedFile=FurMotifs,
-                        IPfiles=IPFe, 
-                        BackgroundFiles=Inputs, 
-                        genome="Ecoli",
-                        genomeBuild="20080805",
-                        DB="NCBI",
-                        expName="FUR_Fe_BedInput",
-                        format="BEDSE"
-                       )
+   IPfiles=IPFe, 
+   BackgroundFiles=Inputs, 
+   genome="Ecoli",
+   genomeBuild="20080805",
+   DB="NCBI",
+   expName="FUR_Fe_BedInput",
+   format="BEDSE"
+   )
 
 # ChIP-seq datasets dpd in bed single end format
 IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
         system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
 FURdpdBedInputStats <- 
   DetectBindingSitesBed(BedFile=FurMotifs,
-                        IPfiles=IPDpd, 
-                        BackgroundFiles=Inputs, 
-                        genome="Ecoli",
-                        genomeBuild="20080805",
-                        DB="NCBI",
-                        expName="FUR_Dpd_BedInput",
-                        format="BEDSE"
-                       )
+   IPfiles=IPDpd, 
+   BackgroundFiles=Inputs, 
+   genome="Ecoli",
+   genomeBuild="20080805",
+   DB="NCBI",
+   expName="FUR_Dpd_BedInput",
+   format="BEDSE"
+   )
                        
 
 # Combine all FUR binding sites into one table
 corMAT <- recenterBindingSitesAcrossExperiments(
-  expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
-  experimentNames=c("FUR_Fe","FUR_Dpd"),
-  expName="combinedFUR",
-  )
+    expLocations=c("FUR_Fe_BedInput","FUR_Dpd_BedInput"),
+    experimentNames=c("FUR_Fe","FUR_Dpd"),
+    expName="combinedFUR",
+    )
 corMAT
 
 }

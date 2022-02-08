@@ -51,13 +51,13 @@ The genome and build information should be provided and relevant
 
 # Artificial example in Yeast
 # install BSgenome.Scerevisiae.UCSC.sacCer3 prior to run this code
- yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed",
+ yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
                                 package="Motif2Site")
 YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
- SequenceComparison <- compareMotifs2UserProvidedRegions(
+SequenceComparison <- compareMotifs2UserProvidedRegions(
    givenRegion=YeastRegionsChIPseq,
-   motifs = c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"),
-   mismatchNumbers = c(1,0,2),
+   motifs=c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"),
+   mismatchNumbers=c(1,0,2),
    genome="Scerevisiae",
    genomeBuild="sacCer3"
    )

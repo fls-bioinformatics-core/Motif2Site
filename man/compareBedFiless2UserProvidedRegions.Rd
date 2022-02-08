@@ -25,17 +25,17 @@ It returns this comparison to given user binding regions in
 }
 \examples{
 
-yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed",
+yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
                               package="Motif2Site")
 YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
 bed1 <- system.file("extdata", "YeastBedFile1.bed", package="Motif2Site")
 bed2 <- system.file("extdata", "YeastBedFile2.bed", package="Motif2Site")
 BedFilesVector <- c(bed1, bed2)
 SequenceComparison <- compareBedFiless2UserProvidedRegions(
-   givenRegion=YeastRegionsChIPseq,
-   bedfiles = BedFilesVector,
-   motifnames = c("YeastBed1", "YeastBed2")
-   )
+     givenRegion=YeastRegionsChIPseq,
+     bedfiles=BedFilesVector,
+     motifnames=c("YeastBed1", "YeastBed2")
+     )
 SequenceComparison
 
 }

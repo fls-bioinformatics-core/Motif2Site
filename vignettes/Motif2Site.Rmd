@@ -1,41 +1,42 @@
+```{r style, echo = FALSE, results = 'asis'}
+  BiocStyle::markdown()
+```
+
+
+
 ---
 title: "Motif2Site: an R package to detect binding sites from ChIP-seq and recenter them"
-author: "Peyman Zarrineh\\
-
-        The University of Manchester"
+author: 
+- name: Peyman Zarrineh
+  affiliation:
+  - The University of Manchester
+  email: peyman.zarrineh@manchester.ac.uk 
 date: "`r Sys.Date()`"
 bibliography: Motif2Site.bib
 biblio-style: apalike
-output: rmarkdown::html_vignette
+output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Motif2Site}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r style, echo=FALSE, results='asis', message=FALSE}
-knitr::opts_chunk$set(tidy         = FALSE,
-                      warning      = FALSE,
-                      message      = FALSE)
-
-```
 
 
 
+abstract: >
 
-# Abstract
-
-Motif2Stie is an R package to detect transcription factor binding sites from motif sets and ChIP-seq experiments. The motif sets are either user provided bed files or user provided DNA nucleotide sequence motifs. It also combines and compares binding sites of a transcription factor across various experiments and conditions.
+'Motif2Site' is an R package to detect transcription factor binding sites from motif sets and ChIP-seq experiments. The motif sets are either user provided bed files or user provided DNA nucleotide sequence motifs. It also combines and compares binding sites of a transcription factor across various experiments and conditions.
 
 
 
 # Introduction
 
-Transcription factors often bind to specific DNA nucleotide patterns reffered to as sequence motifs. Although sequence motifs are well-characterized for many transcription factors, detecting the actual binding sites is not always a straightforward task. Chromatin immunoprecipitation (ChIP) followed by DNA sequencing (ChIP-seq) is the major technology to detect binding regions of transcription factors. However, the binding regions detected by ChIP-seq may contains several or no DNA sequence motifs. **Motif2Site** is a novel R package which uses ChIP-seq information and detect transcription factor binding sites from a user provided DNA sequence motifs set.
+Transcription factors often bind to specific DNA nucleotide patterns referred to as sequence motifs. Although sequence motifs are well-characterized for many transcription factors, detecting the actual binding sites is not always a straightforward task. Chromatin immunoprecipitation (ChIP) followed by DNA sequencing (ChIP-seq) is the major technology to detect binding regions of transcription factors. However, the binding regions detected by ChIP-seq may contains several or no DNA sequence motifs. **Motif2Site** is a novel R package which uses ChIP-seq information and detect transcription factor binding sites from a user provided DNA sequence motifs set.
 
-**Motif2Site** gets two different input, motif and ChIP-seq alignment information, to detect binding sites. First input is ChIP-seq alignment short reads in the bam or bed format. For each aligned short read the center of the alignment is calculated using **GenomicAlignments** [@Lawrence2013] and **Rsamtools** [@Morgan2020] packages. Motif information is the second input which is provided by user either as a bed file or a DNA string with a mismatch number. In the case of DNA string input, **Biostrings** [@Pages2019] and **BSgenome** [@Herve2019] packages are used to find motif locations on the genome in **GenomicRanges** [@Lawrence2013] format.
+**Motif2Site** gets two different input, motif and ChIP-seq alignment information, to detect binding sites. First input is ChIP-seq alignment short reads in the bam or bed format. For each aligned short read the center of the alignment is calculated using `r Biocpkg("GenomicAlignments")` [@Lawrence2013] and `r Biocpkg("Rsamtools")` [@Morgan2020] packages. Motif information is the second input which is provided by user either as a bed file or a DNA string with a mismatch number. In the case of DNA string input, `r Biocpkg("Biostrings")` [@Pages2019] and `r Biocpkg("BSgenome")` [@Herve2019] packages are used to find motif locations on the genome in `r Biocpkg("GenomicRanges")` [@Lawrence2013] format.
 
-Negative binomial distribution is used to model count data by using **edgeR** package [@Robinson2010]. **mixtools** [@Benaglia2009] is used to deconvolve binding intensities of closely spaced binding sites. **Motif2Site** also combines binding sites across different experiments. It calls differential binding sites using TMM normalization and GLM test using **edgeR** package [@Robinson2010]. 
+Negative binomial distribution is used to model count data by using `r Biocpkg("edgeR")` package [@Robinson2010]. `r CRANpkg("mixtools")` [@Benaglia2009] is used to deconvolve binding intensities of closely spaced binding sites. **Motif2Site** also combines binding sites across different experiments. It calls differential binding sites using TMM normalization and GLM test using `r Biocpkg("edgeR")` package [@Robinson2010]. 
 
 
 # Major functions of Motif2Site
@@ -64,9 +65,17 @@ As the first example, an artificially generated  "YeastSampleMotif.bed" bed file
 
 ```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=6}
 
-yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
+yeastExampleFile = 
+  system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
 YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
-SequenceComparison <- compareMotifs2UserProvidedRegions(givenRegion=YeastRegionsChIPseq ,motifs = c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"), mismatchNumbers = c(1,0,2), genome="Scerevisiae",  genomeBuild="sacCer3")
+SequenceComparison <- 
+  compareMotifs2UserProvidedRegions(
+    givenRegion=YeastRegionsChIPseq,
+    motifs = c("TGATTSCAGGANT", "TGATTCCAGGANT", "TGATWSCAGGANT"),
+    mismatchNumbers = c(1,0,2),
+    genome="Scerevisiae",
+    genomeBuild="sacCer3"
+    )
 SequenceComparison
 
 ```
@@ -80,12 +89,18 @@ In the following example, an artificially generated  "YeastSampleMotif.bed" bed 
 
 # Yeast artificial dataset for comparison bed files
 
-yeastExampleFile = system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
+yeastExampleFile = 
+  system.file("extdata", "YeastSampleMotif.bed", package="Motif2Site")
 YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
 bed1 <- system.file("extdata", "YeastBedFile1.bed", package="Motif2Site")
 bed2 <- system.file("extdata", "YeastBedFile2.bed", package="Motif2Site")
 BedFilesVector <- c(bed1, bed2)
-SequenceComparison <- compareBedFiless2UserProvidedRegions(givenRegion=YeastRegionsChIPseq , bedfiles = BedFilesVector, motifnames = c("YeastBed1", "YeastBed2"))
+SequenceComparison <- 
+  compareBedFiless2UserProvidedRegions(
+    givenRegion=YeastRegionsChIPseq,
+    bedfiles = BedFilesVector,
+    motifnames = c("YeastBed1", "YeastBed2")
+    )
 SequenceComparison
 
 

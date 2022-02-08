@@ -54,7 +54,7 @@ Takes user provied bed regions, and check for validity of them.
 \examples{
 
 # FUR candidate motifs in NC_000913 E. coli
-FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
+FurMotifs=system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 
 # ChIP-seq datasets in bed single end format
 IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
