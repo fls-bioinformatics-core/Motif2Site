@@ -1,3 +1,9 @@
+# Motif2Site 0.99.3
+
++ Adding help page data.Rd
+
+
+
 # Motif2Site 0.99.2
 
 + Update readme by Bioconductor installation instructions using BiocManager
