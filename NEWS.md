@@ -1,3 +1,8 @@
+# Motif2Site 0.99.4
+
++ Remove examples from data.Rd
+
+
 # Motif2Site 0.99.3
 
 + Adding help page data.Rd

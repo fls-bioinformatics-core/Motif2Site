@@ -43,22 +43,16 @@ instances of "GWWTGANAA" motif with 1-mistmatch and "GWWTGAGAAT" with
 }
 \examples{
 
-## First example to compare user provided motifs and binding sites in Yeast 
+## Data for examplex to compare user provided motifs and binding sites in Yeast 
 
 yeastExampleFile=system.file("extdata", "YeastSampleMotif.bed",
                               package="Motif2Site")
 YeastRegionsChIPseq <- Bed2Granges(yeastExampleFile)
 bed1 <- system.file("extdata", "YeastBedFile1.bed", package="Motif2Site")
 bed2 <- system.file("extdata", "YeastBedFile2.bed", package="Motif2Site")
-BedFilesVector <- c(bed1, bed2)
-SequenceComparison <- compareBedFiless2UserProvidedRegions(
-     givenRegion=YeastRegionsChIPseq,
-     bedfiles=BedFilesVector,
-     motifnames=c("YeastBed1", "YeastBed2")
-     )
-SequenceComparison
 
-## Two examples of binding site detection in E. coli from synthetic bed files
+
+## Data for examples of binding site detection in E. coli
 
 # FUR candidate motifs in NC_000913 E. coli
 FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
@@ -68,19 +62,6 @@ FurMotifs = system.file("extdata", "FurMotifs.bed", package="Motif2Site")
 
 IPFe <- c(system.file("extdata", "FUR_fe1.bed", package="Motif2Site"),
           system.file("extdata", "FUR_fe2.bed", package="Motif2Site"))
-Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
-            system.file("extdata", "Input2.bed", package="Motif2Site"))
-FURfeBedInputStats <- 
-  DetectBindingSitesBed(BedFile=FurMotifs,
-                        IPfiles=IPFe, 
-                        BackgroundFiles=Inputs, 
-                        genome="Ecoli",
-                        genomeBuild="20080805",
-                        DB="NCBI",
-                        expName="FUR_Fe_BedInput",
-                        format="BEDSE"
-                        )
-FURfeBedInputStats
 
 
 # ChIP-seq FUR dpd datasets binding sites from user provided bed file 
@@ -88,16 +69,12 @@ FURfeBedInputStats
 
 IPDpd <- c(system.file("extdata", "FUR_dpd1.bed", package="Motif2Site"),
            system.file("extdata", "FUR_dpd2.bed", package="Motif2Site"))
-FURdpdBedInputStats <- 
-  DetectBindingSitesBed(BedFile=FurMotifs,
-                        IPfiles=IPDpd, 
-                        BackgroundFiles=Inputs, 
-                        genome="Ecoli",
-                        genomeBuild="20080805",
-                        DB="NCBI",
-                        expName="FUR_Dpd_BedInput",
-                        format="BEDSE"
-                        )
-FURdpdBedInputStats
+
+
+# ChIP-seq background
+
+Inputs <- c(system.file("extdata", "Input1.bed", package="Motif2Site"),
+            system.file("extdata", "Input2.bed", package="Motif2Site"))
+
 
 }
