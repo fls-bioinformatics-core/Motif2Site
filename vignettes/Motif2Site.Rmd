@@ -1,33 +1,29 @@
-```{r style, echo = FALSE, results = 'asis'}
-  BiocStyle::markdown()
-```
-
-
-
 ---
-title: "Motif2Site: an R package to detect binding sites from ChIP-seq and recenter them"
-author: 
+title: "'Motif2Site': an R package to detect binding sites from ChIP-seq and
+ recenter them"
+author:
 - name: Peyman Zarrineh
   affiliation:
   - The University of Manchester
-  email: peyman.zarrineh@manchester.ac.uk 
-date: "`r Sys.Date()`"
+  email: peyman.zarrineh@manchester.ac.uk
+package: "`r BiocStyle::pkg_ver('Motif2Site')`"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  BiocStyle::html_document
+vignette: >
+    %\VignetteIndexEntry{Motif2Site} 
+    %\VignettePackage{Motif2Site}
+    %\VignetteEngine{knitr::rmarkdown} 
+    %\VignetteEncoding{UTF-8}
 bibliography: Motif2Site.bib
 biblio-style: apalike
-output: BiocStyle::html_document
-vignette: >
-  %\VignetteIndexEntry{Motif2Site}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-
-
-
 abstract: >
-
-'Motif2Site' is an R package to detect transcription factor binding sites from motif sets and ChIP-seq experiments. The motif sets are either user provided bed files or user provided DNA nucleotide sequence motifs. It also combines and compares binding sites of a transcription factor across various experiments and conditions.
-
+ <p> 'Motif2Site' is an R package to detect transcription factor binding sites
+ from motif sets and ChIP-seq experiments. The motif sets are either user
+ provided bed files or user provided DNA nucleotide sequence motifs. It also
+ combines andcompares binding sites of a transcription factor across various
+ experiments and conditions.
+---
 
 
 # Introduction

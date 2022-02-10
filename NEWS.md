@@ -1,3 +1,8 @@
+# Motif2Site 0.99.5
+
++ Resolve problem with overwriting BiocStyle in vignette
+
+
 # Motif2Site 0.99.4
 
 + Remove examples from data.Rd
