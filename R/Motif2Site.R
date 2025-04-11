@@ -1479,7 +1479,15 @@ DetectFdrCutoffBH  <- function(TestTableFile="TestResults", fdrValue=0.05) {
   {
     stop("No motif has been accepted. Use higher fdrValue")
   }
-  return(max(pvals[accepted], na.rm=NA))
+  
+  pvals <- pvals[accepted]
+  pvals <- pvals[!is.na(pvals)] #Remove possible NAs
+  if(length(pvals)==0)
+  {
+      stop("No motif has been accepted. Use higher fdrValue")
+  }
+  mPvals <- max(pvals, na.rm = TRUE)
+  return(mPvals)
 
 }
 

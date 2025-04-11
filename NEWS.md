@@ -1,3 +1,9 @@
+# Motif2Site 1.11.1
+
++ Address the Error in Bioconductor build
++ Move the source github from Bioinference to fls-bioinformatics-core
+
+
 # Motif2Site 0.99.5
 
 + Resolve problem with overwriting BiocStyle in vignette

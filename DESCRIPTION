@@ -1,11 +1,11 @@
 Package: Motif2Site
 Type: Package
 Title: Detect binding sites from motifs and ChIP-seq experiments, and compare binding sites across conditions
-Version: 1.11.0
+Version: 1.11.1
 Depends: R (>= 4.1)
 Authors@R: person("Peyman Zarrineh", email="peyman.zarrineh@manchester.ac.uk", role=c("cre", "aut"), comment = c(ORCID = "0000-0003-4820-4101"))
 Description: Detect binding sites using motifs IUPAC sequence or bed coordinates and ChIP-seq experiments in bed or bam format. Combine/compare binding sites across experiments, tissues, or conditions. All normalization and differential steps are done using TMM-GLM method. Signal decomposition is done by setting motifs as the centers of the mixture of normal distribution curves.
-BugReports: https://github.com/ManchesterBioinference/Motif2Site/issues
+BugReports: https://github.com/fls-bioinformatics-core/Motif2Site/issues
 License: GPL-2
 LazyData: false
 Encoding: UTF-8
